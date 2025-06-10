@@ -4,8 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { Progress } from "@/components/ui/progress";
-import { Clock, CheckCircle } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Clock, AlertTriangle, CheckCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import ExamResults from "./ExamResults";
 import { saveSubmission, type Exam, type Submission } from "@/lib/examStorage";
@@ -20,8 +21,10 @@ const ExamTaking = ({ exam, studentName, onComplete }: ExamTakingProps) => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<{ [questionId: string]: number }>({});
   const [timeLeft, setTimeLeft] = useState(exam.duration * 60); // Convert to seconds
-  const [isCompleted, setIsCompleted] = useState(false);
+  const [showSubmitDialog, setShowSubmitDialog] = useState(false);
+  const [showTimeWarning, setShowTimeWarning] = useState(false);
   const [submission, setSubmission] = useState<Submission | null>(null);
+  const [startTime] = useState(Date.now());
   const { toast } = useToast();
 
   const currentQuestion = exam.questions[currentQuestionIndex];
@@ -30,56 +33,65 @@ const ExamTaking = ({ exam, studentName, onComplete }: ExamTakingProps) => {
 
   // Timer effect
   useEffect(() => {
-    if (timeLeft <= 0 && !isCompleted) {
-      handleSubmitExam();
+    if (timeLeft <= 0) {
+      handleAutoSubmit();
       return;
     }
 
+    // Show warning when 5 minutes left
+    if (timeLeft === 300 && !showTimeWarning) {
+      setShowTimeWarning(true);
+      toast({
+        title: "Time Warning!",
+        description: "Only 5 minutes remaining",
+        variant: "destructive"
+      });
+    }
+
     const timer = setInterval(() => {
-      setTimeLeft(prev => prev - 1);
+      setTimeLeft((prev) => prev - 1);
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [timeLeft, isCompleted]);
+  }, [timeLeft, showTimeWarning, toast]);
 
   const formatTime = (seconds: number) => {
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    const secs = seconds % 60;
-    
-    if (hours > 0) {
-      return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-    }
-    return `${minutes}:${secs.toString().padStart(2, '0')}`;
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+  };
+
+  const getTimeColor = () => {
+    if (timeLeft <= 300) return "text-red-600"; // Red for last 5 minutes
+    if (timeLeft <= 600) return "text-yellow-600"; // Yellow for last 10 minutes
+    return "text-green-600";
   };
 
   const handleAnswerChange = (value: string) => {
     setAnswers(prev => ({
       ...prev,
-      [currentQuestion.id]: Number(value)
+      [currentQuestion.id]: parseInt(value)
     }));
   };
 
-  const goToNextQuestion = () => {
-    if (currentQuestionIndex < totalQuestions - 1) {
-      setCurrentQuestionIndex(currentQuestionIndex + 1);
-    }
+  const calculateScore = () => {
+    let score = 0;
+    let maxScore = 0;
+    
+    exam.questions.forEach(question => {
+      maxScore += question.points;
+      if (answers[question.id] === question.correctAnswer) {
+        score += question.points;
+      }
+    });
+    
+    return { score, maxScore };
   };
 
-  const goToPreviousQuestion = () => {
-    if (currentQuestionIndex > 0) {
-      setCurrentQuestionIndex(currentQuestionIndex - 1);
-    }
-  };
-
-  const handleSubmitExam = () => {
-    const score = exam.questions.reduce((total, question) => {
-      const userAnswer = answers[question.id];
-      return userAnswer === question.correctAnswer ? total + question.points : total;
-    }, 0);
-
-    const maxScore = exam.questions.reduce((total, question) => total + question.points, 0);
-
+  const handleAutoSubmit = () => {
+    const { score, maxScore } = calculateScore();
+    const timeTaken = Math.round((Date.now() - startTime) / 1000);
+    
     const newSubmission: Submission = {
       id: Date.now().toString(),
       studentName,
@@ -88,20 +100,45 @@ const ExamTaking = ({ exam, studentName, onComplete }: ExamTakingProps) => {
       score,
       maxScore,
       submittedAt: new Date().toISOString(),
-      timeTaken: (exam.duration * 60) - timeLeft
+      timeTaken
     };
-
+    
     saveSubmission(exam.id, newSubmission);
     setSubmission(newSubmission);
-    setIsCompleted(true);
+    
+    toast({
+      title: "Time's Up!",
+      description: "Your exam has been automatically submitted",
+      variant: "destructive"
+    });
+  };
 
+  const handleSubmit = () => {
+    const { score, maxScore } = calculateScore();
+    const timeTaken = Math.round((Date.now() - startTime) / 1000);
+    
+    const newSubmission: Submission = {
+      id: Date.now().toString(),
+      studentName,
+      examId: exam.id,
+      answers,
+      score,
+      maxScore,
+      submittedAt: new Date().toISOString(),
+      timeTaken
+    };
+    
+    saveSubmission(exam.id, newSubmission);
+    setSubmission(newSubmission);
+    setShowSubmitDialog(false);
+    
     toast({
       title: "Exam Submitted Successfully!",
       description: `Your score: ${score}/${maxScore}`,
     });
   };
 
-  if (isCompleted && submission) {
+  if (submission) {
     return (
       <ExamResults 
         exam={exam}
@@ -114,128 +151,152 @@ const ExamTaking = ({ exam, studentName, onComplete }: ExamTakingProps) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
       <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="bg-white/80 backdrop-blur rounded-lg shadow-lg p-6 mb-8">
+        {/* Header with timer and progress */}
+        <div className="bg-white/80 backdrop-blur border-0 shadow-lg rounded-lg p-6 mb-6">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h1 className="text-2xl font-bold text-gray-800">{exam.title}</h1>
               <p className="text-gray-600">Student: {studentName}</p>
             </div>
             <div className="text-right">
-              <div className="flex items-center gap-2 text-lg font-bold">
+              <div className={`flex items-center gap-2 text-lg font-bold ${getTimeColor()}`}>
                 <Clock className="h-5 w-5" />
-                <span className={timeLeft < 300 ? "text-red-600" : "text-gray-800"}>
-                  {formatTime(timeLeft)}
-                </span>
+                {formatTime(timeLeft)}
               </div>
-              <p className="text-sm text-gray-600">Time Remaining</p>
+              {timeLeft <= 300 && (
+                <Badge variant="destructive" className="mt-1">
+                  <AlertTriangle className="h-3 w-3 mr-1" />
+                  Time Warning
+                </Badge>
+              )}
             </div>
           </div>
           
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm text-gray-600">
-              <span>Progress: {currentQuestionIndex + 1} of {totalQuestions}</span>
-              <span>Answered: {answeredQuestions}/{totalQuestions}</span>
-            </div>
-            <Progress value={((currentQuestionIndex + 1) / totalQuestions) * 100} className="h-2" />
+          <div className="flex justify-between items-center">
+            <span className="text-sm text-gray-600">
+              Question {currentQuestionIndex + 1} of {totalQuestions}
+            </span>
+            <span className="text-sm text-gray-600">
+              Answered: {answeredQuestions}/{totalQuestions}
+            </span>
+          </div>
+          
+          <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+            <div 
+              className="bg-blue-600 h-2 rounded-full transition-all duration-300" 
+              style={{ width: `${((currentQuestionIndex + 1) / totalQuestions) * 100}%` }}
+            />
           </div>
         </div>
 
         {/* Question Card */}
-        <Card className="bg-white/80 backdrop-blur border-0 shadow-lg max-w-4xl mx-auto">
+        <Card className="bg-white/80 backdrop-blur border-0 shadow-lg mb-6">
           <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <span>Question {currentQuestionIndex + 1}</span>
-              <span className="text-sm font-normal text-gray-600">
-                {currentQuestion.points} point{currentQuestion.points !== 1 ? 's' : ''}
-              </span>
-            </CardTitle>
-            <CardDescription className="text-base leading-relaxed">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg">
+                Question {currentQuestionIndex + 1}
+              </CardTitle>
+              <Badge variant="outline">
+                {currentQuestion.points} {currentQuestion.points === 1 ? 'point' : 'points'}
+              </Badge>
+            </div>
+            <CardDescription className="text-base text-gray-700 mt-4">
               {currentQuestion.text}
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent>
             <RadioGroup
               value={answers[currentQuestion.id]?.toString() || ""}
               onValueChange={handleAnswerChange}
               className="space-y-4"
             >
               {currentQuestion.options.map((option, index) => (
-                <div key={index} className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-gray-50 transition-colors">
+                <div key={index} className="flex items-center space-x-3 p-4 border rounded-lg hover:bg-gray-50 transition-colors">
                   <RadioGroupItem value={index.toString()} id={`option-${index}`} />
-                  <Label htmlFor={`option-${index}`} className="flex-1 cursor-pointer text-base">
+                  <Label htmlFor={`option-${index}`} className="flex-1 cursor-pointer">
                     <span className="font-medium mr-2">{String.fromCharCode(65 + index)}.</span>
                     {option}
                   </Label>
+                  {answers[currentQuestion.id] === index && (
+                    <CheckCircle className="h-5 w-5 text-green-600" />
+                  )}
                 </div>
               ))}
             </RadioGroup>
+          </CardContent>
+        </Card>
 
-            {/* Navigation */}
-            <div className="flex items-center justify-between pt-6 border-t">
+        {/* Navigation */}
+        <div className="flex justify-between items-center">
+          <Button
+            variant="outline"
+            onClick={() => setCurrentQuestionIndex(prev => Math.max(0, prev - 1))}
+            disabled={currentQuestionIndex === 0}
+          >
+            Previous
+          </Button>
+          
+          <div className="flex gap-2">
+            {exam.questions.map((_, index) => (
               <Button
-                variant="outline"
-                onClick={goToPreviousQuestion}
-                disabled={currentQuestionIndex === 0}
+                key={index}
+                variant={index === currentQuestionIndex ? "default" : "outline"}
+                size="sm"
+                onClick={() => setCurrentQuestionIndex(index)}
+                className={`w-10 h-10 ${
+                  answers[exam.questions[index].id] !== undefined
+                    ? 'bg-green-100 border-green-300 text-green-800'
+                    : ''
+                }`}
               >
-                Previous
+                {index + 1}
               </Button>
+            ))}
+          </div>
 
-              <div className="flex gap-2">
-                {answers[currentQuestion.id] !== undefined && (
-                  <CheckCircle className="h-5 w-5 text-green-600" />
+          {currentQuestionIndex === totalQuestions - 1 ? (
+            <Button
+              onClick={() => setShowSubmitDialog(true)}
+              className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
+            >
+              Submit Exam
+            </Button>
+          ) : (
+            <Button
+              onClick={() => setCurrentQuestionIndex(prev => Math.min(totalQuestions - 1, prev + 1))}
+              disabled={currentQuestionIndex === totalQuestions - 1}
+            >
+              Next
+            </Button>
+          )}
+        </div>
+
+        {/* Submit Dialog */}
+        <AlertDialog open={showSubmitDialog} onOpenChange={setShowSubmitDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Submit Exam?</AlertDialogTitle>
+              <AlertDialogDescription>
+                You have answered {answeredQuestions} out of {totalQuestions} questions.
+                {answeredQuestions < totalQuestions && (
+                  <span className="block mt-2 text-yellow-600">
+                    Warning: You haven't answered all questions. Unanswered questions will be marked as incorrect.
+                  </span>
                 )}
-                <span className="text-sm text-gray-600">
-                  {answers[currentQuestion.id] !== undefined ? "Answered" : "Not answered"}
-                </span>
-              </div>
-
-              {currentQuestionIndex === totalQuestions - 1 ? (
-                <Button
-                  onClick={handleSubmitExam}
-                  className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
-                >
-                  Submit Exam
-                </Button>
-              ) : (
-                <Button
-                  onClick={goToNextQuestion}
-                  className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
-                >
-                  Next
-                </Button>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Question Navigator */}
-        <Card className="bg-white/80 backdrop-blur border-0 shadow-lg max-w-4xl mx-auto mt-6">
-          <CardHeader>
-            <CardTitle className="text-lg">Question Navigator</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-10 gap-2">
-              {exam.questions.map((_, index) => (
-                <Button
-                  key={index}
-                  variant={index === currentQuestionIndex ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setCurrentQuestionIndex(index)}
-                  className={`w-full ${
-                    answers[exam.questions[index].id] !== undefined
-                      ? "bg-green-100 border-green-300 text-green-800 hover:bg-green-200"
-                      : index === currentQuestionIndex
-                      ? "bg-blue-600 text-white"
-                      : ""
-                  }`}
-                >
-                  {index + 1}
-                </Button>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+                <br />
+                Are you sure you want to submit your exam? This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <Button variant="outline" onClick={() => setShowSubmitDialog(false)}>
+                Continue Exam
+              </Button>
+              <AlertDialogAction onClick={handleSubmit}>
+                Submit Exam
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   );

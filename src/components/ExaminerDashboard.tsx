@@ -2,9 +2,10 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, ArrowLeft, Eye, Users, Clock } from "lucide-react";
+import { Plus, ArrowLeft, Eye, Users, Clock, Settings } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import ExamCreator from "./ExamCreator";
+import ExamManagement from "./ExamManagement";
 import { getExams, type Exam } from "@/lib/examStorage";
 
 interface ExaminerDashboardProps {
@@ -13,8 +14,13 @@ interface ExaminerDashboardProps {
 
 const ExaminerDashboard = ({ onBack }: ExaminerDashboardProps) => {
   const [showCreator, setShowCreator] = useState(false);
+  const [selectedExam, setSelectedExam] = useState<Exam | null>(null);
   const [exams, setExams] = useState<Exam[]>(getExams());
   const { toast } = useToast();
+
+  const refreshExams = () => {
+    setExams(getExams());
+  };
 
   const handleExamCreated = (newExam: Exam) => {
     setExams([...exams, newExam]);
@@ -24,6 +30,25 @@ const ExaminerDashboard = ({ onBack }: ExaminerDashboardProps) => {
       description: `Exam code: ${newExam.code}`,
     });
   };
+
+  if (selectedExam) {
+    return (
+      <ExamManagement 
+        exam={selectedExam}
+        onBack={() => setSelectedExam(null)}
+        onExamUpdated={() => {
+          refreshExams();
+          // Update selected exam with fresh data
+          const updatedExam = getExams().find(e => e.id === selectedExam.id);
+          if (updatedExam) {
+            setSelectedExam(updatedExam);
+          } else {
+            setSelectedExam(null);
+          }
+        }}
+      />
+    );
+  }
 
   if (showCreator) {
     return (
@@ -123,8 +148,14 @@ const ExaminerDashboard = ({ onBack }: ExaminerDashboardProps) => {
                     </div>
                   </div>
                   <div className="mt-4 pt-4 border-t">
-                    <Button variant="outline" size="sm" className="w-full">
-                      View Details
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="w-full"
+                      onClick={() => setSelectedExam(exam)}
+                    >
+                      <Settings className="h-4 w-4 mr-2" />
+                      Manage Exam
                     </Button>
                   </div>
                 </CardContent>

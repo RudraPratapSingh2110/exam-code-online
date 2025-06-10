@@ -1,4 +1,3 @@
-
 export interface Question {
   id: string;
   text: string;
@@ -98,6 +97,97 @@ export const getSubmissions = (): Submission[] => {
 export const getSubmissionsByExam = (examId: string): Submission[] => {
   const submissions = getSubmissions();
   return submissions.filter(sub => sub.examId === examId);
+};
+
+// Enhanced exam management functions
+export const updateExam = (examId: string, updates: Partial<Exam>): void => {
+  const exams = getExams();
+  const examIndex = exams.findIndex(e => e.id === examId);
+  
+  if (examIndex >= 0) {
+    exams[examIndex] = { ...exams[examIndex], ...updates };
+    localStorage.setItem(EXAMS_KEY, JSON.stringify(exams));
+  }
+};
+
+export const deleteExam = (examId: string): void => {
+  const exams = getExams();
+  const filteredExams = exams.filter(e => e.id !== examId);
+  localStorage.setItem(EXAMS_KEY, JSON.stringify(filteredExams));
+  
+  // Also delete related submissions
+  const submissions = getSubmissions();
+  const filteredSubmissions = submissions.filter(s => s.examId !== examId);
+  localStorage.setItem(SUBMISSIONS_KEY, JSON.stringify(filteredSubmissions));
+};
+
+export const toggleExamStatus = (examId: string): void => {
+  const exam = getExamById(examId);
+  if (exam) {
+    updateExam(examId, { isActive: !exam.isActive });
+  }
+};
+
+export const duplicateExam = (examId: string): Exam | null => {
+  const exam = getExamById(examId);
+  if (!exam) return null;
+  
+  const newExam: Exam = {
+    ...exam,
+    id: Date.now().toString(),
+    title: `${exam.title} (Copy)`,
+    code: generateExamCode(),
+    createdAt: new Date().toISOString(),
+    submissions: []
+  };
+  
+  saveExam(newExam);
+  return newExam;
+};
+
+// Analytics functions
+export const getExamStatistics = (examId: string) => {
+  const submissions = getSubmissionsByExam(examId);
+  
+  if (submissions.length === 0) {
+    return {
+      totalStudents: 0,
+      averageScore: 0,
+      highestScore: 0,
+      lowestScore: 0,
+      passRate: 0,
+      averageTime: 0
+    };
+  }
+  
+  const scores = submissions.map(s => (s.score / s.maxScore) * 100);
+  const times = submissions.map(s => s.timeTaken);
+  const passThreshold = 60; // 60% pass rate
+  
+  return {
+    totalStudents: submissions.length,
+    averageScore: Math.round(scores.reduce((a, b) => a + b, 0) / scores.length),
+    highestScore: Math.round(Math.max(...scores)),
+    lowestScore: Math.round(Math.min(...scores)),
+    passRate: Math.round((scores.filter(s => s >= passThreshold).length / scores.length) * 100),
+    averageTime: Math.round(times.reduce((a, b) => a + b, 0) / times.length)
+  };
+};
+
+export const exportExamResults = (examId: string): string => {
+  const exam = getExamById(examId);
+  const submissions = getSubmissionsByExam(examId);
+  
+  if (!exam) return '';
+  
+  const csvHeader = 'Student Name,Score,Max Score,Percentage,Time Taken (min),Submitted At\n';
+  const csvData = submissions.map(sub => {
+    const percentage = Math.round((sub.score / sub.maxScore) * 100);
+    const timeInMinutes = Math.round(sub.timeTaken / 60);
+    return `${sub.studentName},${sub.score},${sub.maxScore},${percentage}%,${timeInMinutes},${new Date(sub.submittedAt).toLocaleString()}`;
+  }).join('\n');
+  
+  return csvHeader + csvData;
 };
 
 // Initialize with sample data if no exams exist

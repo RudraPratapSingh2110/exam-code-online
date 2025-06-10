@@ -249,3 +249,21 @@ export const initializeSampleData = (): void => {
 
 // Initialize sample data when the module loads
 initializeSampleData();
+
+export const getStudentSubmissions = (studentName: string): Submission[] => {
+  const exams = getExams();
+  const allSubmissions: Submission[] = [];
+  
+  exams.forEach(exam => {
+    if (exam.submissions) {
+      const studentSubmissions = exam.submissions.filter(
+        submission => submission.studentName === studentName
+      );
+      allSubmissions.push(...studentSubmissions);
+    }
+  });
+  
+  return allSubmissions.sort((a, b) => 
+    new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()
+  );
+};

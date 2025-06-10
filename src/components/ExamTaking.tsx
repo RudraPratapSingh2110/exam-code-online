@@ -6,9 +6,10 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Clock, AlertTriangle, CheckCircle } from "lucide-react";
+import { Clock, AlertTriangle, CheckCircle, Shield } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import ExamResults from "./ExamResults";
+import AIProctoring from "./AIProctoring";
 import { saveSubmission, type Exam, type Submission } from "@/lib/examStorage";
 
 interface ExamTakingProps {
@@ -17,14 +18,23 @@ interface ExamTakingProps {
   onComplete: () => void;
 }
 
+interface ProctoringEvent {
+  type: 'tab_switch' | 'multiple_faces' | 'no_face' | 'voice_detected' | 'suspicious_movement';
+  timestamp: string;
+  description: string;
+  severity: 'low' | 'medium' | 'high';
+}
+
 const ExamTaking = ({ exam, studentName, onComplete }: ExamTakingProps) => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<{ [questionId: string]: number }>({});
-  const [timeLeft, setTimeLeft] = useState(exam.duration * 60); // Convert to seconds
+  const [timeLeft, setTimeLeft] = useState(exam.duration * 60);
   const [showSubmitDialog, setShowSubmitDialog] = useState(false);
   const [showTimeWarning, setShowTimeWarning] = useState(false);
   const [submission, setSubmission] = useState<Submission | null>(null);
   const [startTime] = useState(Date.now());
+  const [proctoringViolations, setProctoringViolations] = useState<ProctoringEvent[]>([]);
+  const [proctoringEnabled, setProctoringEnabled] = useState(true);
   const { toast } = useToast();
 
   const currentQuestion = exam.questions[currentQuestionIndex];
@@ -38,7 +48,6 @@ const ExamTaking = ({ exam, studentName, onComplete }: ExamTakingProps) => {
       return;
     }
 
-    // Show warning when 5 minutes left
     if (timeLeft === 300 && !showTimeWarning) {
       setShowTimeWarning(true);
       toast({
@@ -62,8 +71,8 @@ const ExamTaking = ({ exam, studentName, onComplete }: ExamTakingProps) => {
   };
 
   const getTimeColor = () => {
-    if (timeLeft <= 300) return "text-red-600"; // Red for last 5 minutes
-    if (timeLeft <= 600) return "text-yellow-600"; // Yellow for last 10 minutes
+    if (timeLeft <= 300) return "text-red-600";
+    if (timeLeft <= 600) return "text-yellow-600";
     return "text-green-600";
   };
 
@@ -86,6 +95,21 @@ const ExamTaking = ({ exam, studentName, onComplete }: ExamTakingProps) => {
     });
     
     return { score, maxScore };
+  };
+
+  const handleProctoringViolation = (violation: ProctoringEvent) => {
+    setProctoringViolations(prev => [violation, ...prev]);
+    
+    // Auto-submit if too many high-severity violations
+    const highSeverityViolations = [...proctoringViolations, violation].filter(v => v.severity === 'high');
+    if (highSeverityViolations.length >= 5) {
+      toast({
+        title: "Exam Auto-Submitted",
+        description: "Too many violations detected. Exam submitted automatically.",
+        variant: "destructive"
+      });
+      handleAutoSubmit();
+    }
   };
 
   const handleAutoSubmit = () => {
@@ -151,12 +175,34 @@ const ExamTaking = ({ exam, studentName, onComplete }: ExamTakingProps) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
       <div className="container mx-auto px-4 py-8">
+        {/* AI Proctoring Panel */}
+        {proctoringEnabled && (
+          <div className="mb-6">
+            <AIProctoring 
+              isActive={true}
+              onViolation={handleProctoringViolation}
+              studentName={studentName}
+            />
+          </div>
+        )}
+
         {/* Header with timer and progress */}
         <div className="bg-white/80 backdrop-blur border-0 shadow-lg rounded-lg p-6 mb-6">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h1 className="text-2xl font-bold text-gray-800">{exam.title}</h1>
               <p className="text-gray-600">Student: {studentName}</p>
+              {proctoringEnabled && (
+                <div className="flex items-center gap-2 mt-2">
+                  <Shield className="h-4 w-4 text-green-600" />
+                  <span className="text-sm text-green-600">AI Proctoring Active</span>
+                  {proctoringViolations.length > 0 && (
+                    <Badge variant="destructive" className="text-xs">
+                      {proctoringViolations.length} violations
+                    </Badge>
+                  )}
+                </div>
+              )}
             </div>
             <div className="text-right">
               <div className={`flex items-center gap-2 text-lg font-bold ${getTimeColor()}`}>
@@ -226,7 +272,6 @@ const ExamTaking = ({ exam, studentName, onComplete }: ExamTakingProps) => {
           </CardContent>
         </Card>
 
-        {/* Navigation */}
         <div className="flex justify-between items-center">
           <Button
             variant="outline"
@@ -271,7 +316,6 @@ const ExamTaking = ({ exam, studentName, onComplete }: ExamTakingProps) => {
           )}
         </div>
 
-        {/* Submit Dialog */}
         <AlertDialog open={showSubmitDialog} onOpenChange={setShowSubmitDialog}>
           <AlertDialogContent>
             <AlertDialogHeader>
@@ -281,6 +325,11 @@ const ExamTaking = ({ exam, studentName, onComplete }: ExamTakingProps) => {
                 {answeredQuestions < totalQuestions && (
                   <span className="block mt-2 text-yellow-600">
                     Warning: You haven't answered all questions. Unanswered questions will be marked as incorrect.
+                  </span>
+                )}
+                {proctoringViolations.length > 0 && (
+                  <span className="block mt-2 text-red-600">
+                    Note: {proctoringViolations.length} proctoring violations were detected during this exam.
                   </span>
                 )}
                 <br />

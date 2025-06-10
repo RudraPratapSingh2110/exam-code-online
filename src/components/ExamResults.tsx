@@ -1,7 +1,10 @@
 
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle, XCircle, Clock, User, Trophy } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { CheckCircle, XCircle, Clock, User, BookOpen, Shield, BarChart3 } from "lucide-react";
+import ProctoringReport from "./ProctoringReport";
 import { type Exam, type Submission } from "@/lib/examStorage";
 
 interface ExamResultsProps {
@@ -11,142 +14,202 @@ interface ExamResultsProps {
 }
 
 const ExamResults = ({ exam, submission, onFinish }: ExamResultsProps) => {
+  const [showProctoringReport, setShowProctoringReport] = useState(false);
+  
   const percentage = Math.round((submission.score / submission.maxScore) * 100);
-  const timeTakenMinutes = Math.floor(submission.timeTaken / 60);
-  const timeTakenSeconds = submission.timeTaken % 60;
-
-  const getGrade = (percentage: number) => {
-    if (percentage >= 90) return { grade: "A+", color: "text-green-600", bg: "bg-green-100" };
-    if (percentage >= 80) return { grade: "A", color: "text-green-600", bg: "bg-green-100" };
-    if (percentage >= 70) return { grade: "B", color: "text-blue-600", bg: "bg-blue-100" };
-    if (percentage >= 60) return { grade: "C", color: "text-yellow-600", bg: "bg-yellow-100" };
-    if (percentage >= 50) return { grade: "D", color: "text-orange-600", bg: "bg-orange-100" };
-    return { grade: "F", color: "text-red-600", bg: "bg-red-100" };
+  const timeInMinutes = Math.round(submission.timeTaken / 60);
+  
+  const getGradeColor = (percent: number) => {
+    if (percent >= 90) return "text-green-600";
+    if (percent >= 80) return "text-blue-600";
+    if (percent >= 70) return "text-yellow-600";
+    if (percent >= 60) return "text-orange-600";
+    return "text-red-600";
   };
 
-  const gradeInfo = getGrade(percentage);
+  const getGradeLetter = (percent: number) => {
+    if (percent >= 90) return "A";
+    if (percent >= 80) return "B";
+    if (percent >= 70) return "C";
+    if (percent >= 60) return "D";
+    return "F";
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-indigo-50">
       <div className="container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto space-y-8">
-          {/* Results Header */}
-          <Card className="bg-white/80 backdrop-blur border-0 shadow-xl text-center">
-            <CardHeader>
-              <div className="mx-auto w-20 h-20 bg-gradient-to-r from-green-500 to-green-600 rounded-full flex items-center justify-center mb-4">
-                <Trophy className="h-10 w-10 text-white" />
-              </div>
-              <CardTitle className="text-3xl font-bold text-gray-800">Exam Completed!</CardTitle>
-              <CardDescription className="text-lg">
-                {exam.title}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid gap-6 md:grid-cols-3">
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-gray-800">{submission.score}</div>
-                  <div className="text-sm text-gray-600">out of {submission.maxScore}</div>
-                  <div className="text-xs text-gray-500 mt-1">Total Score</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-gray-800">{percentage}%</div>
-                  <div className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${gradeInfo.bg} ${gradeInfo.color} mt-2`}>
-                    Grade: {gradeInfo.grade}
-                  </div>
-                </div>
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-gray-800">
-                    {timeTakenMinutes}:{timeTakenSeconds.toString().padStart(2, '0')}
-                  </div>
-                  <div className="text-sm text-gray-600">minutes</div>
-                  <div className="text-xs text-gray-500 mt-1">Time Taken</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+        {/* Header */}
+        <div className="text-center mb-8">
+          <div className="mx-auto w-20 h-20 bg-gradient-to-r from-green-500 to-blue-500 rounded-full flex items-center justify-center mb-4">
+            <CheckCircle className="h-10 w-10 text-white" />
+          </div>
+          <h1 className="text-4xl font-bold text-gray-800 mb-2">Exam Completed!</h1>
+          <p className="text-gray-600 text-lg">Thank you for taking the examination</p>
+        </div>
 
-          {/* Student Info */}
-          <Card className="bg-white/80 backdrop-blur border-0 shadow-lg">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <User className="h-5 w-5" />
-                Student Information
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="grid gap-4 md:grid-cols-2">
-              <div>
-                <div className="text-sm text-gray-600">Student Name</div>
-                <div className="font-semibold">{submission.studentName}</div>
+        {/* Results Summary */}
+        <Card className="bg-white/80 backdrop-blur border-0 shadow-xl mb-8">
+          <CardHeader className="text-center pb-4">
+            <CardTitle className="text-2xl">{exam.title}</CardTitle>
+            <CardDescription className="text-lg">
+              Results for {submission.studentName}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {/* Score Display */}
+            <div className="text-center mb-8">
+              <div className={`text-8xl font-bold mb-4 ${getGradeColor(percentage)}`}>
+                {getGradeLetter(percentage)}
               </div>
-              <div>
-                <div className="text-sm text-gray-600">Submission Time</div>
-                <div className="font-semibold">
-                  {new Date(submission.submittedAt).toLocaleString()}
-                </div>
+              <div className="text-3xl font-semibold text-gray-700 mb-2">
+                {submission.score} / {submission.maxScore}
               </div>
-            </CardContent>
-          </Card>
+              <div className={`text-2xl font-medium ${getGradeColor(percentage)}`}>
+                {percentage}%
+              </div>
+            </div>
 
-          {/* Question Review */}
-          <Card className="bg-white/80 backdrop-blur border-0 shadow-lg">
-            <CardHeader>
-              <CardTitle>Question Review</CardTitle>
-              <CardDescription>Review your answers and see the correct solutions</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
+            {/* Statistics Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+              <div className="text-center p-4 bg-blue-50 rounded-lg">
+                <User className="h-8 w-8 mx-auto mb-2 text-blue-600" />
+                <div className="text-lg font-semibold text-blue-600">{submission.studentName}</div>
+                <div className="text-sm text-gray-600">Student</div>
+              </div>
+              
+              <div className="text-center p-4 bg-green-50 rounded-lg">
+                <BarChart3 className="h-8 w-8 mx-auto mb-2 text-green-600" />
+                <div className="text-lg font-semibold text-green-600">{percentage}%</div>
+                <div className="text-sm text-gray-600">Score</div>
+              </div>
+              
+              <div className="text-center p-4 bg-purple-50 rounded-lg">
+                <Clock className="h-8 w-8 mx-auto mb-2 text-purple-600" />
+                <div className="text-lg font-semibold text-purple-600">{timeInMinutes}m</div>
+                <div className="text-sm text-gray-600">Time Taken</div>
+              </div>
+              
+              <div className="text-center p-4 bg-indigo-50 rounded-lg">
+                <BookOpen className="h-8 w-8 mx-auto mb-2 text-indigo-600" />
+                <div className="text-lg font-semibold text-indigo-600">{exam.questions.length}</div>
+                <div className="text-sm text-gray-600">Questions</div>
+              </div>
+            </div>
+
+            {/* Performance Indicator */}
+            <div className="mb-6">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-sm font-medium text-gray-700">Performance</span>
+                <span className="text-sm text-gray-600">{submission.score}/{submission.maxScore}</span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-3">
+                <div 
+                  className={`h-3 rounded-full transition-all duration-500 ${
+                    percentage >= 80 ? 'bg-green-500' : 
+                    percentage >= 60 ? 'bg-yellow-500' : 'bg-red-500'
+                  }`}
+                  style={{ width: `${percentage}%` }}
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* AI Proctoring Section */}
+        <Card className="bg-white/80 backdrop-blur border-0 shadow-xl mb-8">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Shield className="h-5 w-5 text-indigo-600" />
+              AI Proctoring Summary
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-600 mb-2">
+                  This exam was monitored using AI-powered proctoring technology
+                </p>
+                <Badge variant="outline" className="bg-green-50 text-green-700 border-green-300">
+                  Exam Integrity Verified
+                </Badge>
+              </div>
+              <Button 
+                variant="outline" 
+                onClick={() => setShowProctoringReport(!showProctoringReport)}
+                className="ml-4"
+              >
+                {showProctoringReport ? 'Hide' : 'View'} Proctoring Report
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Proctoring Report */}
+        {showProctoringReport && (
+          <div className="mb-8">
+            <ProctoringReport submission={submission} />
+          </div>
+        )}
+
+        {/* Question Review */}
+        <Card className="bg-white/80 backdrop-blur border-0 shadow-xl mb-8">
+          <CardHeader>
+            <CardTitle>Question Review</CardTitle>
+            <CardDescription>
+              Review your answers and see which questions you got right or wrong
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
               {exam.questions.map((question, index) => {
                 const userAnswer = submission.answers[question.id];
                 const isCorrect = userAnswer === question.correctAnswer;
+                const wasAnswered = userAnswer !== undefined;
                 
                 return (
-                  <div key={question.id} className="border rounded-lg p-4">
+                  <div key={question.id} className={`p-4 rounded-lg border-2 ${
+                    !wasAnswered ? 'border-gray-300 bg-gray-50' :
+                    isCorrect ? 'border-green-300 bg-green-50' : 'border-red-300 bg-red-50'
+                  }`}>
                     <div className="flex items-start justify-between mb-3">
-                      <h4 className="font-semibold text-lg">
-                        Question {index + 1}
-                      </h4>
-                      <div className="flex items-center gap-2">
-                        {isCorrect ? (
+                      <div className="flex items-center gap-3">
+                        <span className="font-semibold text-gray-700">Q{index + 1}.</span>
+                        {!wasAnswered ? (
+                          <Badge variant="secondary">Not Answered</Badge>
+                        ) : isCorrect ? (
                           <CheckCircle className="h-5 w-5 text-green-600" />
                         ) : (
                           <XCircle className="h-5 w-5 text-red-600" />
                         )}
-                        <span className={`text-sm font-medium ${isCorrect ? 'text-green-600' : 'text-red-600'}`}>
-                          {isCorrect ? `+${question.points}` : '0'} pts
-                        </span>
                       </div>
+                      <Badge variant="outline">{question.points} pts</Badge>
                     </div>
                     
-                    <p className="text-gray-700 mb-4">{question.text}</p>
+                    <p className="text-gray-800 mb-3 font-medium">{question.text}</p>
                     
                     <div className="space-y-2">
                       {question.options.map((option, optionIndex) => {
                         const isUserAnswer = userAnswer === optionIndex;
                         const isCorrectAnswer = question.correctAnswer === optionIndex;
                         
-                        let bgColor = "";
-                        if (isCorrectAnswer) bgColor = "bg-green-100 border-green-300";
-                        else if (isUserAnswer && !isCorrect) bgColor = "bg-red-100 border-red-300";
-                        else bgColor = "bg-gray-50 border-gray-200";
-                        
                         return (
-                          <div
-                            key={optionIndex}
-                            className={`p-3 border rounded ${bgColor}`}
-                          >
-                            <div className="flex items-center justify-between">
-                              <span>
-                                <span className="font-medium mr-2">
-                                  {String.fromCharCode(65 + optionIndex)}.
-                                </span>
-                                {option}
-                              </span>
-                              {isCorrectAnswer && (
-                                <span className="text-green-600 text-sm font-medium">Correct</span>
-                              )}
-                              {isUserAnswer && !isCorrect && (
-                                <span className="text-red-600 text-sm font-medium">Your Answer</span>
-                              )}
-                            </div>
+                          <div key={optionIndex} className={`p-2 rounded border ${
+                            isCorrectAnswer ? 'border-green-400 bg-green-100' :
+                            isUserAnswer && !isCorrectAnswer ? 'border-red-400 bg-red-100' :
+                            'border-gray-200 bg-white'
+                          }`}>
+                            <span className="font-medium mr-2">{String.fromCharCode(65 + optionIndex)}.</span>
+                            {option}
+                            {isCorrectAnswer && (
+                              <Badge variant="outline" className="ml-2 text-green-700 border-green-400">
+                                Correct Answer
+                              </Badge>
+                            )}
+                            {isUserAnswer && !isCorrectAnswer && (
+                              <Badge variant="outline" className="ml-2 text-red-700 border-red-400">
+                                Your Answer
+                              </Badge>
+                            )}
                           </div>
                         );
                       })}
@@ -154,19 +217,19 @@ const ExamResults = ({ exam, submission, onFinish }: ExamResultsProps) => {
                   </div>
                 );
               })}
-            </CardContent>
-          </Card>
+            </div>
+          </CardContent>
+        </Card>
 
-          {/* Action Buttons */}
-          <div className="text-center">
-            <Button
-              onClick={onFinish}
-              size="lg"
-              className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
-            >
-              Return to Student Portal
-            </Button>
-          </div>
+        {/* Actions */}
+        <div className="text-center">
+          <Button
+            onClick={onFinish}
+            size="lg"
+            className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 px-8"
+          >
+            Return to Dashboard
+          </Button>
         </div>
       </div>
     </div>

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -282,12 +281,12 @@ const ExamScheduler = ({ onBack }: ExamSchedulerProps) => {
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label htmlFor="examId">Link to Existing Exam (Optional)</Label>
-                  <Select value={newExam.examId} onValueChange={(value) => setNewExam({ ...newExam, examId: value })}>
+                  <Select value={newExam.examId} onValueChange={(value) => setNewExam({ ...newExam, examId: value === 'new' ? '' : value })}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select an existing exam" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Create New Schedule</SelectItem>
+                      <SelectItem value="new">Create New Schedule</SelectItem>
                       {availableExams.map((exam) => (
                         <SelectItem key={exam.id} value={exam.id}>
                           {exam.title} ({exam.code})
@@ -574,3 +573,5 @@ const ExamScheduler = ({ onBack }: ExamSchedulerProps) => {
 };
 
 export default ExamScheduler;
+
+}

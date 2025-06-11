@@ -2,18 +2,18 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { BookOpen, UserCheck, GraduationCap, Calendar, Activity, Users, Shield, Brain, Eye, ArrowRight, CheckCircle, Star, TrendingUp, BarChart3, Target, Zap, Monitor, Clock } from "lucide-react";
+import { BookOpen, UserCheck, GraduationCap, Activity, Users, Shield, Brain, Eye, ArrowRight, CheckCircle, Star, TrendingUp, BarChart3, Target, Zap, Monitor, Clock } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import LoginForm from "@/components/auth/LoginForm";
 import ExaminerDashboard from "@/components/ExaminerDashboard";
 import StudentDashboard from "@/components/StudentDashboard";
-import ExamScheduler from "@/components/ExamScheduler";
+import AnalyticsDashboard from "@/components/AnalyticsDashboard";
 import ExamMonitor from "@/components/ExamMonitor";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 
 const Index = () => {
   const { user, logout } = useAuth();
-  const [currentView, setCurrentView] = useState<'home' | 'examiner' | 'student' | 'scheduler' | 'monitor'>('home');
+  const [currentView, setCurrentView] = useState<'home' | 'examiner' | 'student' | 'analytics' | 'monitor'>('home');
   const [showLogin, setShowLogin] = useState(false);
 
   // ML Model Accuracy Data for Chart
@@ -44,8 +44,8 @@ const Index = () => {
         return <ExaminerDashboard onBack={() => setCurrentView('home')} />;
       case 'student':
         return <StudentDashboard onBack={() => setCurrentView('home')} />;
-      case 'scheduler':
-        return <ExamScheduler onBack={() => setCurrentView('home')} />;
+      case 'analytics':
+        return <AnalyticsDashboard onBack={() => setCurrentView('home')} />;
       case 'monitor':
         return <ExamMonitor onBack={() => setCurrentView('home')} />;
       default:
@@ -85,9 +85,9 @@ const Index = () => {
               <Button 
                 onClick={() => setShowLogin(true)}
                 size="lg"
-                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-xl px-12 py-6 rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105"
+                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-xl px-16 py-8 rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105"
               >
-                Get Started <ArrowRight className="ml-3 h-6 w-6" />
+                Get Started <ArrowRight className="ml-3 h-7 w-7" />
               </Button>
             </div>
           </div>
@@ -135,15 +135,15 @@ const Index = () => {
                 </CardHeader>
               </Card>
 
-              {/* Smart Scheduling */}
+              {/* Analytics Dashboard */}
               <Card className="bg-white/10 backdrop-blur-xl border-white/20 hover:bg-white/15 transition-all duration-300 hover:scale-105 group">
                 <CardHeader className="text-center">
                   <div className="mx-auto w-16 h-16 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                    <Calendar className="h-8 w-8 text-white" />
+                    <BarChart3 className="h-8 w-8 text-white" />
                   </div>
-                  <CardTitle className="text-xl text-white">Smart Exam Scheduling</CardTitle>
+                  <CardTitle className="text-xl text-white">Advanced Analytics</CardTitle>
                   <CardDescription className="text-blue-200">
-                    Advanced scheduling with time controls, student limits, auto-activation, and exam lifecycle management
+                    Comprehensive performance insights, violation analysis, and AI model accuracy tracking with detailed reports
                   </CardDescription>
                 </CardHeader>
               </Card>
@@ -161,15 +161,15 @@ const Index = () => {
                 </CardHeader>
               </Card>
 
-              {/* Analytics & Reporting */}
+              {/* Exam Management */}
               <Card className="bg-white/10 backdrop-blur-xl border-white/20 hover:bg-white/15 transition-all duration-300 hover:scale-105 group">
                 <CardHeader className="text-center">
                   <div className="mx-auto w-16 h-16 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                    <BarChart3 className="h-8 w-8 text-white" />
+                    <UserCheck className="h-8 w-8 text-white" />
                   </div>
-                  <CardTitle className="text-xl text-white">Advanced Analytics</CardTitle>
+                  <CardTitle className="text-xl text-white">Exam Management</CardTitle>
                   <CardDescription className="text-blue-200">
-                    Detailed performance analytics, violation reports, and ML-powered insights for exam integrity
+                    Complete exam lifecycle management with creation tools, grading systems, and result analytics
                   </CardDescription>
                 </CardHeader>
               </Card>
@@ -341,37 +341,37 @@ const Index = () => {
               </CardContent>
             </Card>
 
-            {/* Exam Scheduler */}
+            {/* Analytics Dashboard */}
             <Card className="hover:shadow-2xl transition-all duration-300 border-0 shadow-lg bg-white/80 backdrop-blur group">
               <CardHeader className="text-center pb-4">
                 <div className="mx-auto w-16 h-16 bg-gradient-to-r from-green-500 to-green-600 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                  <Calendar className="h-8 w-8 text-white" />
+                  <BarChart3 className="h-8 w-8 text-white" />
                 </div>
-                <CardTitle className="text-2xl font-bold text-gray-800">Exam Scheduler</CardTitle>
+                <CardTitle className="text-2xl font-bold text-gray-800">Analytics Dashboard</CardTitle>
                 <CardDescription className="text-gray-600">
-                  Schedule and manage examination sessions with time controls
+                  Comprehensive performance insights and violation analytics
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <ul className="space-y-3 text-sm text-gray-600">
                   <li className="flex items-center">
                     <CheckCircle className="w-4 h-4 text-green-500 mr-3" />
-                    Schedule exams with date/time constraints
+                    Detailed performance metrics and trends
                   </li>
                   <li className="flex items-center">
                     <CheckCircle className="w-4 h-4 text-green-500 mr-3" />
-                    Manage student registration limits
+                    AI model accuracy tracking
                   </li>
                   <li className="flex items-center">
                     <CheckCircle className="w-4 h-4 text-green-500 mr-3" />
-                    Automatic exam activation/deactivation
+                    Violation pattern analysis
                   </li>
                 </ul>
                 <Button 
-                  onClick={() => setCurrentView('scheduler')}
+                  onClick={() => setCurrentView('analytics')}
                   className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white"
                 >
-                  Access Scheduler
+                  View Analytics
                 </Button>
               </CardContent>
             </Card>

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Plus, Trash2, Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { saveExam, generateExamCode, type Exam, type Question } from "@/lib/examStorage";
@@ -224,7 +224,7 @@ const ExamCreator = ({ onExamCreated, onCancel }: ExamCreatorProps) => {
                   </div>
 
                   <div className="space-y-4">
-                    <Label>Answer Options *</Label>
+                    <Label>Answer Options * (Select the correct answer)</Label>
                     <RadioGroup
                       value={question.correctAnswer.toString()}
                       onValueChange={(value) => updateQuestion(question.id, "correctAnswer", Number(value))}
@@ -238,12 +238,22 @@ const ExamCreator = ({ onExamCreated, onCancel }: ExamCreatorProps) => {
                             onChange={(e) => updateOption(question.id, optionIndex, e.target.value)}
                             className="flex-1"
                           />
-                          <span className="text-sm text-gray-500 w-16">
+                          <Badge 
+                            variant={question.correctAnswer === optionIndex ? "default" : "outline"}
+                            className={`w-16 text-center ${
+                              question.correctAnswer === optionIndex 
+                                ? "bg-green-100 text-green-800 border-green-300" 
+                                : ""
+                            }`}
+                          >
                             {question.correctAnswer === optionIndex ? "Correct" : ""}
-                          </span>
+                          </Badge>
                         </div>
                       ))}
                     </RadioGroup>
+                    <p className="text-sm text-gray-500">
+                      Click the radio button next to the option to mark it as correct
+                    </p>
                   </div>
 
                   <div className="flex items-center gap-4">

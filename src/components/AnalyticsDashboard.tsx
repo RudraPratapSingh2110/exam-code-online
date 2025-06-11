@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,7 +10,6 @@ interface AnalyticsDashboardProps {
 }
 
 const AnalyticsDashboard = ({ onBack }: AnalyticsDashboardProps) => {
-  // Analytics data
   const examStats = {
     totalExams: 145,
     activeExams: 12,

@@ -2,485 +2,484 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { BookOpen, UserCheck, GraduationCap, Activity, Users, Shield, Brain, Eye, ArrowRight, CheckCircle, Star, TrendingUp, BarChart3, Target, Zap, Monitor, Clock } from "lucide-react";
-import { useAuth } from "@/components/auth/AuthProvider";
-import LoginForm from "@/components/auth/LoginForm";
-import ExaminerDashboard from "@/components/ExaminerDashboard";
-import StudentDashboard from "@/components/StudentDashboard";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
+import { ArrowLeft, Shield, Camera, Brain, BarChart3, BookOpen, Users, GraduationCap, UserPlus, LogIn, Eye, Clock, CheckCircle, Award, Lock, Zap } from "lucide-react";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { useToast } from "@/hooks/use-toast";
+import ExamCreator from "@/components/ExamCreator";
+import QuestionBank from "@/components/QuestionBank";
 import AnalyticsDashboard from "@/components/AnalyticsDashboard";
-import ExamMonitor from "@/components/ExamMonitor";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
+import { type Exam } from "@/lib/examStorage";
 
 const Index = () => {
-  const { user, logout } = useAuth();
-  const [currentView, setCurrentView] = useState<'home' | 'examiner' | 'student' | 'analytics' | 'monitor'>('home');
-  const [showLogin, setShowLogin] = useState(false);
+  const [currentView, setCurrentView] = useState<'home' | 'examCreator' | 'questionBank' | 'analytics'>('home');
+  const [showAuthDialog, setShowAuthDialog] = useState(false);
+  const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
+  const [userType, setUserType] = useState<'teacher' | 'student'>('teacher');
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [user, setUser] = useState<{ name: string; email: string; type: 'teacher' | 'student' } | null>(null);
+  const { toast } = useToast();
 
-  // ML Model Accuracy Data for Chart
+  // ML Model accuracy data - February to June
   const mlAccuracyData = [
-    { month: 'Jan', accuracy: 87.2, violations: 145 },
-    { month: 'Feb', accuracy: 89.1, violations: 132 },
-    { month: 'Mar', accuracy: 91.3, violations: 118 },
-    { month: 'Apr', accuracy: 93.7, violations: 97 },
-    { month: 'May', accuracy: 95.2, violations: 84 },
-    { month: 'Jun', accuracy: 96.8, violations: 71 },
-    { month: 'Jul', accuracy: 97.4, violations: 58 },
-    { month: 'Aug', accuracy: 98.1, violations: 42 },
-    { month: 'Sep', accuracy: 98.6, violations: 31 },
-    { month: 'Oct', accuracy: 98.9, violations: 24 },
-    { month: 'Nov', accuracy: 99.2, violations: 18 },
-    { month: 'Dec', accuracy: 99.5, violations: 12 }
+    { month: 'Feb', accuracy: 96.2, violations: 145 },
+    { month: 'Mar', accuracy: 97.1, violations: 132 },
+    { month: 'Apr', accuracy: 98.3, violations: 98 },
+    { month: 'May', accuracy: 98.7, violations: 89 },
+    { month: 'Jun', accuracy: 99.1, violations: 76 },
   ];
 
-  if (!user && showLogin) {
-    return <LoginForm onSuccess={() => setShowLogin(false)} />;
-  }
-
-  const renderCurrentView = () => {
-    if (!user) return null;
+  const handleAuth = (formData: any) => {
+    const userData = {
+      name: formData.name || `${userType} User`,
+      email: formData.email,
+      type: userType
+    };
     
-    switch (currentView) {
-      case 'examiner':
-        return <ExaminerDashboard onBack={() => setCurrentView('home')} />;
-      case 'student':
-        return <StudentDashboard onBack={() => setCurrentView('home')} />;
-      case 'analytics':
-        return <AnalyticsDashboard onBack={() => setCurrentView('home')} />;
-      case 'monitor':
-        return <ExamMonitor onBack={() => setCurrentView('home')} />;
-      default:
-        return null;
-    }
+    setUser(userData);
+    setIsAuthenticated(true);
+    setShowAuthDialog(false);
+    
+    toast({
+      title: authMode === 'signin' ? "Welcome back!" : "Account created successfully!",
+      description: `You are now logged in as a ${userType}.`,
+    });
   };
 
-  if (currentView !== 'home') {
-    return renderCurrentView();
+  const handleLogout = () => {
+    setUser(null);
+    setIsAuthenticated(false);
+    setCurrentView('home');
+    toast({
+      title: "Logged out",
+      description: "You have been successfully logged out.",
+    });
+  };
+
+  const handleExamCreated = (exam: Exam) => {
+    toast({
+      title: "Exam Created!",
+      description: `Exam "${exam.title}" has been created successfully.`,
+    });
+    setCurrentView('home');
+  };
+
+  if (currentView === 'examCreator') {
+    return (
+      <ExamCreator 
+        onExamCreated={handleExamCreated}
+        onCancel={() => setCurrentView('home')}
+      />
+    );
   }
 
-  if (!user) {
+  if (currentView === 'questionBank') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 relative overflow-hidden">
-        {/* Animated background elements */}
-        <div className="absolute inset-0">
-          <div className="absolute top-20 left-20 w-72 h-72 bg-blue-500/10 rounded-full blur-xl animate-pulse"></div>
-          <div className="absolute bottom-20 right-20 w-96 h-96 bg-purple-500/10 rounded-full blur-xl animate-pulse delay-700"></div>
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-indigo-500/10 rounded-full blur-xl animate-pulse delay-1000"></div>
-        </div>
+      <QuestionBank onBack={() => setCurrentView('home')} />
+    );
+  }
 
-        <div className="relative z-10 container mx-auto px-4 py-12">
-          {/* Hero Section */}
-          <div className="text-center mb-16">
-            <div className="flex justify-center mb-8">
-              <div className="p-6 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full shadow-2xl animate-bounce">
-                <Shield className="h-16 w-16 text-white" />
-              </div>
-            </div>
-            <h1 className="text-7xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-indigo-400 bg-clip-text text-transparent mb-6 animate-fade-in">
-              ProctMe
-            </h1>
-            <p className="text-2xl text-blue-100 max-w-4xl mx-auto leading-relaxed mb-8 animate-fade-in delay-300">
-              Revolutionary AI-Powered Online Examination & Proctoring Platform with Advanced Security
-            </p>
-            <div className="flex justify-center animate-fade-in delay-500">
-              <Button 
-                onClick={() => setShowLogin(true)}
-                size="lg"
-                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-xl px-16 py-8 rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105"
-              >
-                Get Started <ArrowRight className="ml-3 h-7 w-7" />
-              </Button>
-            </div>
-          </div>
-
-          {/* Core Features Section */}
-          <div className="mb-16">
-            <h2 className="text-4xl font-bold text-white text-center mb-12">Comprehensive Feature Suite</h2>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {/* AI Proctoring */}
-              <Card className="bg-white/10 backdrop-blur-xl border-white/20 hover:bg-white/15 transition-all duration-300 hover:scale-105 group">
-                <CardHeader className="text-center">
-                  <div className="mx-auto w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                    <Brain className="h-8 w-8 text-white" />
-                  </div>
-                  <CardTitle className="text-xl text-white">AI-Powered Proctoring</CardTitle>
-                  <CardDescription className="text-blue-200">
-                    Real-time face detection, voice analysis, tab switching alerts, and behavior tracking with 99.5% accuracy
-                  </CardDescription>
-                </CardHeader>
-              </Card>
-
-              {/* Secure Authentication */}
-              <Card className="bg-white/10 backdrop-blur-xl border-white/20 hover:bg-white/15 transition-all duration-300 hover:scale-105 group">
-                <CardHeader className="text-center">
-                  <div className="mx-auto w-16 h-16 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                    <Shield className="h-8 w-8 text-white" />
-                  </div>
-                  <CardTitle className="text-xl text-white">Multi-Layer Security</CardTitle>
-                  <CardDescription className="text-blue-200">
-                    Advanced JWT authentication, role-based access control, and encrypted data transmission
-                  </CardDescription>
-                </CardHeader>
-              </Card>
-
-              {/* Real-time Monitoring */}
-              <Card className="bg-white/10 backdrop-blur-xl border-white/20 hover:bg-white/15 transition-all duration-300 hover:scale-105 group">
-                <CardHeader className="text-center">
-                  <div className="mx-auto w-16 h-16 bg-gradient-to-r from-red-500 to-orange-500 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                    <Monitor className="h-8 w-8 text-white" />
-                  </div>
-                  <CardTitle className="text-xl text-white">Live Monitoring Dashboard</CardTitle>
-                  <CardDescription className="text-blue-200">
-                    Real-time exam monitoring with instant violation alerts, analytics, and comprehensive reporting
-                  </CardDescription>
-                </CardHeader>
-              </Card>
-
-              {/* Analytics Dashboard */}
-              <Card className="bg-white/10 backdrop-blur-xl border-white/20 hover:bg-white/15 transition-all duration-300 hover:scale-105 group">
-                <CardHeader className="text-center">
-                  <div className="mx-auto w-16 h-16 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                    <BarChart3 className="h-8 w-8 text-white" />
-                  </div>
-                  <CardTitle className="text-xl text-white">Advanced Analytics</CardTitle>
-                  <CardDescription className="text-blue-200">
-                    Comprehensive performance insights, violation analysis, and AI model accuracy tracking with detailed reports
-                  </CardDescription>
-                </CardHeader>
-              </Card>
-
-              {/* Question Management */}
-              <Card className="bg-white/10 backdrop-blur-xl border-white/20 hover:bg-white/15 transition-all duration-300 hover:scale-105 group">
-                <CardHeader className="text-center">
-                  <div className="mx-auto w-16 h-16 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                    <BookOpen className="h-8 w-8 text-white" />
-                  </div>
-                  <CardTitle className="text-xl text-white">Question Bank System</CardTitle>
-                  <CardDescription className="text-blue-200">
-                    Comprehensive question management with multiple formats, auto-grading, and randomization features
-                  </CardDescription>
-                </CardHeader>
-              </Card>
-
-              {/* Exam Management */}
-              <Card className="bg-white/10 backdrop-blur-xl border-white/20 hover:bg-white/15 transition-all duration-300 hover:scale-105 group">
-                <CardHeader className="text-center">
-                  <div className="mx-auto w-16 h-16 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                    <UserCheck className="h-8 w-8 text-white" />
-                  </div>
-                  <CardTitle className="text-xl text-white">Exam Management</CardTitle>
-                  <CardDescription className="text-blue-200">
-                    Complete exam lifecycle management with creation tools, grading systems, and result analytics
-                  </CardDescription>
-                </CardHeader>
-              </Card>
-            </div>
-          </div>
-
-          {/* AI Technology Showcase */}
-          <div className="mb-16">
-            <h2 className="text-4xl font-bold text-white text-center mb-8">AI Technology Performance</h2>
-            <div className="grid lg:grid-cols-2 gap-8 items-center">
-              <div className="space-y-6">
-                <div className="bg-white/10 backdrop-blur-xl rounded-xl p-6 border border-white/20">
-                  <h3 className="text-2xl font-bold text-white mb-4">Machine Learning Model Accuracy</h3>
-                  <p className="text-blue-200 mb-4">
-                    Our proprietary AI models continuously learn and improve, achieving industry-leading accuracy in detecting academic violations and ensuring exam integrity.
-                  </p>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="text-center">
-                      <div className="text-3xl font-bold text-green-400">99.5%</div>
-                      <div className="text-blue-200 text-sm">Detection Accuracy</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-3xl font-bold text-blue-400">0.1%</div>
-                      <div className="text-blue-200 text-sm">False Positives</div>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="bg-white/10 backdrop-blur-xl rounded-xl p-6 border border-white/20">
-                  <h4 className="text-xl font-bold text-white mb-3">Key AI Features</h4>
-                  <div className="space-y-3">
-                    <div className="flex items-center">
-                      <CheckCircle className="w-5 h-5 text-green-400 mr-3" />
-                      <span className="text-blue-200">Face Detection & Recognition</span>
-                    </div>
-                    <div className="flex items-center">
-                      <CheckCircle className="w-5 h-5 text-green-400 mr-3" />
-                      <span className="text-blue-200">Voice Activity Monitoring</span>
-                    </div>
-                    <div className="flex items-center">
-                      <CheckCircle className="w-5 h-5 text-green-400 mr-3" />
-                      <span className="text-blue-200">Tab Switching Detection</span>
-                    </div>
-                    <div className="flex items-center">
-                      <CheckCircle className="w-5 h-5 text-green-400 mr-3" />
-                      <span className="text-blue-200">Behavioral Pattern Analysis</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white/10 backdrop-blur-xl rounded-xl p-6 border border-white/20">
-                <h4 className="text-xl font-bold text-white mb-4 text-center">ML Model Accuracy Over Time</h4>
-                <ResponsiveContainer width="100%" height={300}>
-                  <AreaChart data={mlAccuracyData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-                    <XAxis dataKey="month" stroke="rgba(255,255,255,0.7)" />
-                    <YAxis stroke="rgba(255,255,255,0.7)" domain={[85, 100]} />
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: 'rgba(0,0,0,0.8)', 
-                        border: '1px solid rgba(255,255,255,0.2)',
-                        borderRadius: '8px'
-                      }}
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="accuracy"
-                      stroke="#60A5FA"
-                      fill="url(#colorAccuracy)"
-                      strokeWidth={3}
-                    />
-                    <defs>
-                      <linearGradient id="colorAccuracy" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#60A5FA" stopOpacity={0.8}/>
-                        <stop offset="95%" stopColor="#60A5FA" stopOpacity={0.1}/>
-                      </linearGradient>
-                    </defs>
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-          </div>
-
-          {/* Technology Stack */}
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-white mb-8">Advanced Technology Features</h2>
-            <div className="grid md:grid-cols-3 gap-8">
-              <div className="bg-white/10 backdrop-blur-xl rounded-xl p-6 border border-white/20 hover:bg-white/15 transition-all">
-                <Target className="h-12 w-12 text-green-400 mx-auto mb-4" />
-                <h3 className="text-xl font-bold text-white mb-2">Precision Monitoring</h3>
-                <p className="text-blue-200">Advanced computer vision algorithms for precise face detection and behavioral analysis</p>
-              </div>
-              
-              <div className="bg-white/10 backdrop-blur-xl rounded-xl p-6 border border-white/20 hover:bg-white/15 transition-all">
-                <Zap className="h-12 w-12 text-yellow-400 mx-auto mb-4" />
-                <h3 className="text-xl font-bold text-white mb-2">Real-time Processing</h3>
-                <p className="text-blue-200">Lightning-fast AI processing with sub-second violation detection and alerting</p>
-              </div>
-              
-              <div className="bg-white/10 backdrop-blur-xl rounded-xl p-6 border border-white/20 hover:bg-white/15 transition-all">
-                <TrendingUp className="h-12 w-12 text-purple-400 mx-auto mb-4" />
-                <h3 className="text-xl font-bold text-white mb-2">Continuous Learning</h3>
-                <p className="text-blue-200">Machine learning models that continuously improve accuracy and reduce false positives</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+  if (currentView === 'analytics') {
+    return (
+      <AnalyticsDashboard onBack={() => setCurrentView('home')} />
     );
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
-      <div className="container mx-auto px-4 py-12">
-        {/* Header with user info */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full">
-              <Shield className="h-8 w-8 text-white" />
+      {/* Navigation */}
+      <nav className="bg-white/90 backdrop-blur border-b border-gray-200">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <Shield className="h-8 w-8 text-blue-600" />
+              <span className="text-2xl font-bold text-gray-800">ProctMe</span>
             </div>
-            <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                Welcome to ProctMe
-              </h1>
-              <p className="text-gray-600">Hello, {user.name} ({user.role})</p>
+            <div className="flex items-center space-x-4">
+              {isAuthenticated ? (
+                <>
+                  <span className="text-sm text-gray-600">Welcome, {user?.name}</span>
+                  <Button variant="outline" onClick={handleLogout}>
+                    Logout
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Dialog open={showAuthDialog} onOpenChange={setShowAuthDialog}>
+                    <DialogTrigger asChild>
+                      <Button 
+                        variant="outline" 
+                        onClick={() => {
+                          setAuthMode('signin');
+                          setShowAuthDialog(true);
+                        }}
+                      >
+                        <LogIn className="h-4 w-4 mr-2" />
+                        Sign In
+                      </Button>
+                    </DialogTrigger>
+                    <AuthDialog 
+                      mode={authMode} 
+                      userType={userType}
+                      onAuth={handleAuth}
+                      onModeChange={setAuthMode}
+                      onUserTypeChange={setUserType}
+                    />
+                  </Dialog>
+                  <Dialog open={showAuthDialog} onOpenChange={setShowAuthDialog}>
+                    <DialogTrigger asChild>
+                      <Button 
+                        onClick={() => {
+                          setAuthMode('signup');
+                          setShowAuthDialog(true);
+                        }}
+                      >
+                        <UserPlus className="h-4 w-4 mr-2" />
+                        Sign Up
+                      </Button>
+                    </DialogTrigger>
+                  </Dialog>
+                </>
+              )}
             </div>
           </div>
-          <Button variant="outline" onClick={logout}>
-            Logout
-          </Button>
+        </div>
+      </nav>
+
+      <div className="container mx-auto px-4 py-12">
+        {/* Hero Section */}
+        <div className="text-center mb-16">
+          <h1 className="text-5xl md:text-6xl font-bold text-gray-800 mb-6">
+            AI-Powered Online
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600"> Proctoring</span>
+          </h1>
+          <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
+            Ensure exam integrity with advanced AI monitoring, real-time violation detection, and comprehensive analytics for educational institutions.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <Button 
+              size="lg" 
+              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-4 text-lg"
+              onClick={() => {
+                if (isAuthenticated) {
+                  setCurrentView('examCreator');
+                } else {
+                  setShowAuthDialog(true);
+                  setAuthMode('signup');
+                }
+              }}
+            >
+              Get Started
+            </Button>
+          </div>
         </div>
 
-        {/* Role-specific dashboard sections */}
-        {user.role === 'examiner' ? (
-          <div className="max-w-6xl mx-auto grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {/* Examiner Portal */}
-            <Card className="hover:shadow-2xl transition-all duration-300 border-0 shadow-lg bg-white/80 backdrop-blur group">
-              <CardHeader className="text-center pb-4">
-                <div className="mx-auto w-16 h-16 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                  <UserCheck className="h-8 w-8 text-white" />
+        {/* Features Section */}
+        <div className="mb-16">
+          <h2 className="text-3xl font-bold text-center text-gray-800 mb-12">
+            Comprehensive Proctoring Features
+          </h2>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <Card className="bg-white/80 backdrop-blur border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+              <CardHeader>
+                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+                  <Camera className="h-6 w-6 text-blue-600" />
                 </div>
-                <CardTitle className="text-2xl font-bold text-gray-800">Exam Management</CardTitle>
-                <CardDescription className="text-gray-600">
-                  Create, manage, and analyze examinations with comprehensive tools
+                <CardTitle>Live Video Monitoring</CardTitle>
+                <CardDescription>
+                  Real-time face detection and behavior analysis to ensure students remain focused during exams
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <ul className="space-y-3 text-sm text-gray-600">
-                  <li className="flex items-center">
-                    <CheckCircle className="w-4 h-4 text-green-500 mr-3" />
-                    Create exams with multiple question types
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="w-4 h-4 text-green-500 mr-3" />
-                    Question bank management system
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="w-4 h-4 text-green-500 mr-3" />
-                    Advanced analytics and reporting
-                  </li>
-                </ul>
-                <Button 
-                  onClick={() => setCurrentView('examiner')}
-                  className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white"
-                >
-                  Access Exam Tools
-                </Button>
-              </CardContent>
             </Card>
 
-            {/* Analytics Dashboard */}
-            <Card className="hover:shadow-2xl transition-all duration-300 border-0 shadow-lg bg-white/80 backdrop-blur group">
-              <CardHeader className="text-center pb-4">
-                <div className="mx-auto w-16 h-16 bg-gradient-to-r from-green-500 to-green-600 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                  <BarChart3 className="h-8 w-8 text-white" />
+            <Card className="bg-white/80 backdrop-blur border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+              <CardHeader>
+                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
+                  <Brain className="h-6 w-6 text-purple-600" />
                 </div>
-                <CardTitle className="text-2xl font-bold text-gray-800">Analytics Dashboard</CardTitle>
-                <CardDescription className="text-gray-600">
-                  Comprehensive performance insights and violation analytics
+                <CardTitle>AI Violation Detection</CardTitle>
+                <CardDescription>
+                  Advanced machine learning algorithms detect suspicious activities like tab switching and unauthorized assistance
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <ul className="space-y-3 text-sm text-gray-600">
-                  <li className="flex items-center">
-                    <CheckCircle className="w-4 h-4 text-green-500 mr-3" />
-                    Detailed performance metrics and trends
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="w-4 h-4 text-green-500 mr-3" />
-                    AI model accuracy tracking
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="w-4 h-4 text-green-500 mr-3" />
-                    Violation pattern analysis
-                  </li>
-                </ul>
-                <Button 
-                  onClick={() => setCurrentView('analytics')}
-                  className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white"
-                >
-                  View Analytics
-                </Button>
-              </CardContent>
             </Card>
 
-            {/* Real-time Monitor */}
-            <Card className="hover:shadow-2xl transition-all duration-300 border-0 shadow-lg bg-white/80 backdrop-blur group md:col-span-2 lg:col-span-1">
-              <CardHeader className="text-center pb-4">
-                <div className="mx-auto w-16 h-16 bg-gradient-to-r from-red-500 to-red-600 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                  <Activity className="h-8 w-8 text-white" />
+            <Card className="bg-white/80 backdrop-blur border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+              <CardHeader>
+                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
+                  <BarChart3 className="h-6 w-6 text-green-600" />
                 </div>
-                <CardTitle className="text-2xl font-bold text-gray-800">Live Monitor</CardTitle>
-                <CardDescription className="text-gray-600">
-                  Real-time monitoring dashboard for tracking student progress
+                <CardTitle>Detailed Analytics</CardTitle>
+                <CardDescription>
+                  Comprehensive reports on exam performance, violation patterns, and system accuracy metrics
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <ul className="space-y-3 text-sm text-gray-600">
-                  <li className="flex items-center">
-                    <CheckCircle className="w-4 h-4 text-green-500 mr-3" />
-                    Live student tracking
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="w-4 h-4 text-green-500 mr-3" />
-                    Real-time violation alerts
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="w-4 h-4 text-green-500 mr-3" />
-                    AI proctoring insights
-                  </li>
-                </ul>
-                <Button 
-                  onClick={() => setCurrentView('monitor')}
-                  className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white"
-                >
-                  <Activity className="h-4 w-4 mr-2" />
-                  Launch Monitor
-                </Button>
-              </CardContent>
+            </Card>
+
+            <Card className="bg-white/80 backdrop-blur border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+              <CardHeader>
+                <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center mb-4">
+                  <BookOpen className="h-6 w-6 text-yellow-600" />
+                </div>
+                <CardTitle>Question Management</CardTitle>
+                <CardDescription>
+                  Create, organize, and manage exam questions with our intuitive question bank system
+                </CardDescription>
+              </CardHeader>
+            </Card>
+
+            <Card className="bg-white/80 backdrop-blur border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+              <CardHeader>
+                <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mb-4">
+                  <Lock className="h-6 w-6 text-red-600" />
+                </div>
+                <CardTitle>Secure Environment</CardTitle>
+                <CardDescription>
+                  Browser lockdown and screen sharing prevention to maintain exam security and integrity
+                </CardDescription>
+              </CardHeader>
+            </Card>
+
+            <Card className="bg-white/80 backdrop-blur border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+              <CardHeader>
+                <div className="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center mb-4">
+                  <Zap className="h-6 w-6 text-indigo-600" />
+                </div>
+                <CardTitle>Real-time Alerts</CardTitle>
+                <CardDescription>
+                  Instant notifications for proctors when violations are detected during live examinations
+                </CardDescription>
+              </CardHeader>
             </Card>
           </div>
-        ) : (
-          <div className="max-w-4xl mx-auto">
-            {/* Student Portal */}
-            <Card className="hover:shadow-2xl transition-all duration-300 border-0 shadow-lg bg-white/80 backdrop-blur">
-              <CardHeader className="text-center pb-4">
-                <div className="mx-auto w-20 h-20 bg-gradient-to-r from-purple-500 to-purple-600 rounded-full flex items-center justify-center mb-4">
-                  <GraduationCap className="h-10 w-10 text-white" />
+        </div>
+
+        {/* ML Model Accuracy Chart */}
+        <div className="mb-16">
+          <Card className="bg-white/80 backdrop-blur border-0 shadow-lg">
+            <CardHeader>
+              <CardTitle className="text-center flex items-center justify-center gap-2">
+                <Brain className="h-6 w-6" />
+                AI Model Performance & Accuracy
+              </CardTitle>
+              <CardDescription className="text-center">
+                Our machine learning model accuracy and violation detection trends (February - June 2024)
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={400}>
+                <LineChart data={mlAccuracyData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.1)" />
+                  <XAxis dataKey="month" stroke="#666" />
+                  <YAxis stroke="#666" domain={[95, 100]} />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: 'rgba(255,255,255,0.9)', 
+                      border: '1px solid rgba(0,0,0,0.1)',
+                      borderRadius: '8px'
+                    }}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="accuracy" 
+                    stroke="#3b82f6" 
+                    strokeWidth={3} 
+                    name="Accuracy %" 
+                    dot={{ fill: '#3b82f6', strokeWidth: 2, r: 6 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+              <div className="grid grid-cols-3 gap-4 mt-6">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-blue-600">99.1%</div>
+                  <div className="text-sm text-gray-600">Current Accuracy</div>
                 </div>
-                <CardTitle className="text-3xl font-bold text-gray-800">Student Portal</CardTitle>
-                <CardDescription className="text-lg text-gray-600">
-                  Enhanced exam-taking experience with AI-powered proctoring
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-green-600">2.9%</div>
+                  <div className="text-sm text-gray-600">Improvement</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-purple-600">76</div>
+                  <div className="text-sm text-gray-600">Violations Detected</div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Dashboard Features */}
+        {isAuthenticated && (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
+            <Card 
+              className="bg-white/80 backdrop-blur border-0 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer"
+              onClick={() => setCurrentView('examCreator')}
+            >
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <BookOpen className="h-6 w-6 text-blue-600" />
+                  </div>
+                  <Badge variant="secondary">New</Badge>
+                </div>
+                <CardTitle>Create Exam</CardTitle>
+                <CardDescription>
+                  Design new examinations with custom questions and settings
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div className="space-y-3">
-                    <h4 className="font-semibold text-gray-800">Exam Features</h4>
-                    <ul className="space-y-2 text-sm text-gray-600">
-                      <li className="flex items-center">
-                        <CheckCircle className="w-4 h-4 text-green-500 mr-3" />
-                        Join exams with unique access codes
-                      </li>
-                      <li className="flex items-center">
-                        <CheckCircle className="w-4 h-4 text-green-500 mr-3" />
-                        Real-time timer with smart warnings
-                      </li>
-                      <li className="flex items-center">
-                        <CheckCircle className="w-4 h-4 text-green-500 mr-3" />
-                        Auto-submit protection features
-                      </li>
-                    </ul>
-                  </div>
-                  <div className="space-y-3">
-                    <h4 className="font-semibold text-gray-800">AI Proctoring</h4>
-                    <ul className="space-y-2 text-sm text-gray-600">
-                      <li className="flex items-center">
-                        <CheckCircle className="w-4 h-4 text-green-500 mr-3" />
-                        Face detection and monitoring
-                      </li>
-                      <li className="flex items-center">
-                        <CheckCircle className="w-4 h-4 text-green-500 mr-3" />
-                        Tab switching detection
-                      </li>
-                      <li className="flex items-center">
-                        <CheckCircle className="w-4 h-4 text-green-500 mr-3" />
-                        Voice activity monitoring
-                      </li>
-                    </ul>
+            </Card>
+
+            <Card 
+              className="bg-white/80 backdrop-blur border-0 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer"
+              onClick={() => setCurrentView('questionBank')}
+            >
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                    <Users className="h-6 w-6 text-green-600" />
                   </div>
                 </div>
-                <Button 
-                  onClick={() => setCurrentView('student')}
-                  className="w-full bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white text-lg py-6"
-                >
-                  Enter Student Portal
-                </Button>
-              </CardContent>
+                <CardTitle>Question Bank</CardTitle>
+                <CardDescription>
+                  Manage and organize your examination questions
+                </CardDescription>
+              </CardHeader>
+            </Card>
+
+            <Card 
+              className="bg-white/80 backdrop-blur border-0 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer"
+              onClick={() => setCurrentView('analytics')}
+            >
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                    <BarChart3 className="h-6 w-6 text-purple-600" />
+                  </div>
+                  <Badge variant="secondary">Analytics</Badge>
+                </div>
+                <CardTitle>Analytics Dashboard</CardTitle>
+                <CardDescription>
+                  View comprehensive exam and performance analytics
+                </CardDescription>
+              </CardHeader>
             </Card>
           </div>
         )}
-
-        <div className="text-center mt-16">
-          <div className="inline-flex items-center gap-2 px-6 py-3 bg-white/60 backdrop-blur rounded-full shadow-lg">
-            <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-            <span className="text-sm font-medium text-gray-600">Secure • AI-Powered • Reliable Analytics</span>
-          </div>
-        </div>
       </div>
     </div>
+  );
+};
+
+// Auth Dialog Component
+const AuthDialog = ({ mode, userType, onAuth, onModeChange, onUserTypeChange }: {
+  mode: 'signin' | 'signup';
+  userType: 'teacher' | 'student';
+  onAuth: (data: any) => void;
+  onModeChange: (mode: 'signin' | 'signup') => void;
+  onUserTypeChange: (type: 'teacher' | 'student') => void;
+}) => {
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    password: '',
+    institution: ''
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onAuth(formData);
+  };
+
+  return (
+    <DialogContent className="sm:max-w-md">
+      <DialogHeader>
+        <DialogTitle>
+          {mode === 'signin' ? 'Sign In' : 'Create Account'}
+        </DialogTitle>
+        <DialogDescription>
+          {mode === 'signin' 
+            ? 'Welcome back! Please enter your credentials.' 
+            : 'Join ProctMe and start creating secure online examinations.'
+          }
+        </DialogDescription>
+      </DialogHeader>
+      
+      <Tabs value={userType} onValueChange={(value) => onUserTypeChange(value as 'teacher' | 'student')}>
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="teacher">Teacher</TabsTrigger>
+          <TabsTrigger value="student">Student</TabsTrigger>
+        </TabsList>
+        
+        <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+          {mode === 'signup' && (
+            <div>
+              <Label htmlFor="name">Full Name</Label>
+              <Input
+                id="name"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                required
+              />
+            </div>
+          )}
+          
+          <div>
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              required
+            />
+          </div>
+          
+          <div>
+            <Label htmlFor="password">Password</Label>
+            <Input
+              id="password"
+              type="password"
+              value={formData.password}
+              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+              required
+            />
+          </div>
+          
+          {mode === 'signup' && userType === 'teacher' && (
+            <div>
+              <Label htmlFor="institution">Institution</Label>
+              <Input
+                id="institution"
+                value={formData.institution}
+                onChange={(e) => setFormData({ ...formData, institution: e.target.value })}
+                placeholder="Your school or university"
+              />
+            </div>
+          )}
+          
+          <Button type="submit" className="w-full">
+            {mode === 'signin' ? 'Sign In' : 'Create Account'}
+          </Button>
+          
+          <div className="text-center">
+            <Button 
+              type="button" 
+              variant="link" 
+              onClick={() => onModeChange(mode === 'signin' ? 'signup' : 'signin')}
+            >
+              {mode === 'signin' 
+                ? "Don't have an account? Sign up" 
+                : "Already have an account? Sign in"
+              }
+            </Button>
+          </div>
+        </form>
+      </Tabs>
+    </DialogContent>
   );
 };
 

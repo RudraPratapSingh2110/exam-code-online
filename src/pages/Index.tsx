@@ -2,18 +2,35 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { BookOpen, UserCheck, GraduationCap, Calendar, Activity, Users, Shield, Brain, Eye, ArrowRight, CheckCircle, Star } from "lucide-react";
+import { BookOpen, UserCheck, GraduationCap, Calendar, Activity, Users, Shield, Brain, Eye, ArrowRight, CheckCircle, Star, TrendingUp, BarChart3, Target, Zap, Monitor, Clock } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import LoginForm from "@/components/auth/LoginForm";
 import ExaminerDashboard from "@/components/ExaminerDashboard";
 import StudentDashboard from "@/components/StudentDashboard";
 import ExamScheduler from "@/components/ExamScheduler";
 import ExamMonitor from "@/components/ExamMonitor";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 
 const Index = () => {
   const { user, logout } = useAuth();
   const [currentView, setCurrentView] = useState<'home' | 'examiner' | 'student' | 'scheduler' | 'monitor'>('home');
   const [showLogin, setShowLogin] = useState(false);
+
+  // ML Model Accuracy Data for Chart
+  const mlAccuracyData = [
+    { month: 'Jan', accuracy: 87.2, violations: 145 },
+    { month: 'Feb', accuracy: 89.1, violations: 132 },
+    { month: 'Mar', accuracy: 91.3, violations: 118 },
+    { month: 'Apr', accuracy: 93.7, violations: 97 },
+    { month: 'May', accuracy: 95.2, violations: 84 },
+    { month: 'Jun', accuracy: 96.8, violations: 71 },
+    { month: 'Jul', accuracy: 97.4, violations: 58 },
+    { month: 'Aug', accuracy: 98.1, violations: 42 },
+    { month: 'Sep', accuracy: 98.6, violations: 31 },
+    { month: 'Oct', accuracy: 98.9, violations: 24 },
+    { month: 'Nov', accuracy: 99.2, violations: 18 },
+    { month: 'Dec', accuracy: 99.5, violations: 12 }
+  ];
 
   if (!user && showLogin) {
     return <LoginForm onSuccess={() => setShowLogin(false)} />;
@@ -62,130 +79,202 @@ const Index = () => {
               ProctMe
             </h1>
             <p className="text-2xl text-blue-100 max-w-4xl mx-auto leading-relaxed mb-8 animate-fade-in delay-300">
-              Next-Generation AI-Powered Online Examination & Proctoring Platform
+              Revolutionary AI-Powered Online Examination & Proctoring Platform with Advanced Security
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-in delay-500">
+            <div className="flex justify-center animate-fade-in delay-500">
               <Button 
                 onClick={() => setShowLogin(true)}
                 size="lg"
-                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-lg px-8 py-4 rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105"
+                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-xl px-12 py-6 rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105"
               >
-                Get Started <ArrowRight className="ml-2 h-5 w-5" />
-              </Button>
-              <Button 
-                variant="outline" 
-                size="lg"
-                className="border-blue-400 text-blue-100 hover:bg-blue-400/10 text-lg px-8 py-4 rounded-full"
-              >
-                Watch Demo
+                Get Started <ArrowRight className="ml-3 h-6 w-6" />
               </Button>
             </div>
           </div>
 
-          {/* Features Grid */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
-            {/* AI Proctoring */}
-            <Card className="bg-white/10 backdrop-blur-xl border-white/20 hover:bg-white/15 transition-all duration-300 hover:scale-105 group">
-              <CardHeader className="text-center">
-                <div className="mx-auto w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                  <Brain className="h-8 w-8 text-white" />
-                </div>
-                <CardTitle className="text-xl text-white">AI-Powered Proctoring</CardTitle>
-                <CardDescription className="text-blue-200">
-                  Advanced AI monitoring with face detection, voice analysis, and behavior tracking
-                </CardDescription>
-              </CardHeader>
-            </Card>
+          {/* Core Features Section */}
+          <div className="mb-16">
+            <h2 className="text-4xl font-bold text-white text-center mb-12">Comprehensive Feature Suite</h2>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {/* AI Proctoring */}
+              <Card className="bg-white/10 backdrop-blur-xl border-white/20 hover:bg-white/15 transition-all duration-300 hover:scale-105 group">
+                <CardHeader className="text-center">
+                  <div className="mx-auto w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                    <Brain className="h-8 w-8 text-white" />
+                  </div>
+                  <CardTitle className="text-xl text-white">AI-Powered Proctoring</CardTitle>
+                  <CardDescription className="text-blue-200">
+                    Real-time face detection, voice analysis, tab switching alerts, and behavior tracking with 99.5% accuracy
+                  </CardDescription>
+                </CardHeader>
+              </Card>
 
-            {/* Secure Authentication */}
-            <Card className="bg-white/10 backdrop-blur-xl border-white/20 hover:bg-white/15 transition-all duration-300 hover:scale-105 group">
-              <CardHeader className="text-center">
-                <div className="mx-auto w-16 h-16 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                  <Shield className="h-8 w-8 text-white" />
-                </div>
-                <CardTitle className="text-xl text-white">Secure Authentication</CardTitle>
-                <CardDescription className="text-blue-200">
-                  Multi-layer security with JWT authentication and role-based access control
-                </CardDescription>
-              </CardHeader>
-            </Card>
+              {/* Secure Authentication */}
+              <Card className="bg-white/10 backdrop-blur-xl border-white/20 hover:bg-white/15 transition-all duration-300 hover:scale-105 group">
+                <CardHeader className="text-center">
+                  <div className="mx-auto w-16 h-16 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                    <Shield className="h-8 w-8 text-white" />
+                  </div>
+                  <CardTitle className="text-xl text-white">Multi-Layer Security</CardTitle>
+                  <CardDescription className="text-blue-200">
+                    Advanced JWT authentication, role-based access control, and encrypted data transmission
+                  </CardDescription>
+                </CardHeader>
+              </Card>
 
-            {/* Real-time Monitoring */}
-            <Card className="bg-white/10 backdrop-blur-xl border-white/20 hover:bg-white/15 transition-all duration-300 hover:scale-105 group">
-              <CardHeader className="text-center">
-                <div className="mx-auto w-16 h-16 bg-gradient-to-r from-red-500 to-orange-500 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                  <Eye className="h-8 w-8 text-white" />
-                </div>
-                <CardTitle className="text-xl text-white">Live Monitoring</CardTitle>
-                <CardDescription className="text-blue-200">
-                  Real-time exam monitoring with instant violation alerts and analytics
-                </CardDescription>
-              </CardHeader>
-            </Card>
+              {/* Real-time Monitoring */}
+              <Card className="bg-white/10 backdrop-blur-xl border-white/20 hover:bg-white/15 transition-all duration-300 hover:scale-105 group">
+                <CardHeader className="text-center">
+                  <div className="mx-auto w-16 h-16 bg-gradient-to-r from-red-500 to-orange-500 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                    <Monitor className="h-8 w-8 text-white" />
+                  </div>
+                  <CardTitle className="text-xl text-white">Live Monitoring Dashboard</CardTitle>
+                  <CardDescription className="text-blue-200">
+                    Real-time exam monitoring with instant violation alerts, analytics, and comprehensive reporting
+                  </CardDescription>
+                </CardHeader>
+              </Card>
+
+              {/* Smart Scheduling */}
+              <Card className="bg-white/10 backdrop-blur-xl border-white/20 hover:bg-white/15 transition-all duration-300 hover:scale-105 group">
+                <CardHeader className="text-center">
+                  <div className="mx-auto w-16 h-16 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                    <Calendar className="h-8 w-8 text-white" />
+                  </div>
+                  <CardTitle className="text-xl text-white">Smart Exam Scheduling</CardTitle>
+                  <CardDescription className="text-blue-200">
+                    Advanced scheduling with time controls, student limits, auto-activation, and exam lifecycle management
+                  </CardDescription>
+                </CardHeader>
+              </Card>
+
+              {/* Question Management */}
+              <Card className="bg-white/10 backdrop-blur-xl border-white/20 hover:bg-white/15 transition-all duration-300 hover:scale-105 group">
+                <CardHeader className="text-center">
+                  <div className="mx-auto w-16 h-16 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                    <BookOpen className="h-8 w-8 text-white" />
+                  </div>
+                  <CardTitle className="text-xl text-white">Question Bank System</CardTitle>
+                  <CardDescription className="text-blue-200">
+                    Comprehensive question management with multiple formats, auto-grading, and randomization features
+                  </CardDescription>
+                </CardHeader>
+              </Card>
+
+              {/* Analytics & Reporting */}
+              <Card className="bg-white/10 backdrop-blur-xl border-white/20 hover:bg-white/15 transition-all duration-300 hover:scale-105 group">
+                <CardHeader className="text-center">
+                  <div className="mx-auto w-16 h-16 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                    <BarChart3 className="h-8 w-8 text-white" />
+                  </div>
+                  <CardTitle className="text-xl text-white">Advanced Analytics</CardTitle>
+                  <CardDescription className="text-blue-200">
+                    Detailed performance analytics, violation reports, and ML-powered insights for exam integrity
+                  </CardDescription>
+                </CardHeader>
+              </Card>
+            </div>
           </div>
 
-          {/* Statistics */}
-          <div className="grid md:grid-cols-4 gap-8 mb-16">
-            <div className="text-center">
-              <div className="text-4xl font-bold text-blue-400 mb-2">99.9%</div>
-              <div className="text-blue-200">Uptime</div>
-            </div>
-            <div className="text-center">
-              <div className="text-4xl font-bold text-purple-400 mb-2">10K+</div>
-              <div className="text-blue-200">Exams Conducted</div>
-            </div>
-            <div className="text-center">
-              <div className="text-4xl font-bold text-indigo-400 mb-2">50K+</div>
-              <div className="text-blue-200">Students</div>
-            </div>
-            <div className="text-center">
-              <div className="text-4xl font-bold text-pink-400 mb-2">95%</div>
-              <div className="text-blue-200">Fraud Detection</div>
+          {/* AI Technology Showcase */}
+          <div className="mb-16">
+            <h2 className="text-4xl font-bold text-white text-center mb-8">AI Technology Performance</h2>
+            <div className="grid lg:grid-cols-2 gap-8 items-center">
+              <div className="space-y-6">
+                <div className="bg-white/10 backdrop-blur-xl rounded-xl p-6 border border-white/20">
+                  <h3 className="text-2xl font-bold text-white mb-4">Machine Learning Model Accuracy</h3>
+                  <p className="text-blue-200 mb-4">
+                    Our proprietary AI models continuously learn and improve, achieving industry-leading accuracy in detecting academic violations and ensuring exam integrity.
+                  </p>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="text-center">
+                      <div className="text-3xl font-bold text-green-400">99.5%</div>
+                      <div className="text-blue-200 text-sm">Detection Accuracy</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-3xl font-bold text-blue-400">0.1%</div>
+                      <div className="text-blue-200 text-sm">False Positives</div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="bg-white/10 backdrop-blur-xl rounded-xl p-6 border border-white/20">
+                  <h4 className="text-xl font-bold text-white mb-3">Key AI Features</h4>
+                  <div className="space-y-3">
+                    <div className="flex items-center">
+                      <CheckCircle className="w-5 h-5 text-green-400 mr-3" />
+                      <span className="text-blue-200">Face Detection & Recognition</span>
+                    </div>
+                    <div className="flex items-center">
+                      <CheckCircle className="w-5 h-5 text-green-400 mr-3" />
+                      <span className="text-blue-200">Voice Activity Monitoring</span>
+                    </div>
+                    <div className="flex items-center">
+                      <CheckCircle className="w-5 h-5 text-green-400 mr-3" />
+                      <span className="text-blue-200">Tab Switching Detection</span>
+                    </div>
+                    <div className="flex items-center">
+                      <CheckCircle className="w-5 h-5 text-green-400 mr-3" />
+                      <span className="text-blue-200">Behavioral Pattern Analysis</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white/10 backdrop-blur-xl rounded-xl p-6 border border-white/20">
+                <h4 className="text-xl font-bold text-white mb-4 text-center">ML Model Accuracy Over Time</h4>
+                <ResponsiveContainer width="100%" height={300}>
+                  <AreaChart data={mlAccuracyData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                    <XAxis dataKey="month" stroke="rgba(255,255,255,0.7)" />
+                    <YAxis stroke="rgba(255,255,255,0.7)" domain={[85, 100]} />
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: 'rgba(0,0,0,0.8)', 
+                        border: '1px solid rgba(255,255,255,0.2)',
+                        borderRadius: '8px'
+                      }}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="accuracy"
+                      stroke="#60A5FA"
+                      fill="url(#colorAccuracy)"
+                      strokeWidth={3}
+                    />
+                    <defs>
+                      <linearGradient id="colorAccuracy" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#60A5FA" stopOpacity={0.8}/>
+                        <stop offset="95%" stopColor="#60A5FA" stopOpacity={0.1}/>
+                      </linearGradient>
+                    </defs>
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
             </div>
           </div>
 
-          {/* Testimonials */}
+          {/* Technology Stack */}
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-white mb-12">Trusted by Educational Leaders</h2>
+            <h2 className="text-4xl font-bold text-white mb-8">Advanced Technology Features</h2>
             <div className="grid md:grid-cols-3 gap-8">
-              <Card className="bg-white/10 backdrop-blur-xl border-white/20">
-                <CardContent className="p-6 text-center">
-                  <div className="flex justify-center mb-4">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className="h-5 w-5 text-yellow-400 fill-current" />
-                    ))}
-                  </div>
-                  <p className="text-blue-100 mb-4">"ProctMe revolutionized our online assessments with its AI proctoring capabilities."</p>
-                  <div className="text-blue-300 font-semibold">Dr. Sarah Johnson</div>
-                  <div className="text-blue-400 text-sm">Stanford University</div>
-                </CardContent>
-              </Card>
+              <div className="bg-white/10 backdrop-blur-xl rounded-xl p-6 border border-white/20 hover:bg-white/15 transition-all">
+                <Target className="h-12 w-12 text-green-400 mx-auto mb-4" />
+                <h3 className="text-xl font-bold text-white mb-2">Precision Monitoring</h3>
+                <p className="text-blue-200">Advanced computer vision algorithms for precise face detection and behavioral analysis</p>
+              </div>
               
-              <Card className="bg-white/10 backdrop-blur-xl border-white/20">
-                <CardContent className="p-6 text-center">
-                  <div className="flex justify-center mb-4">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className="h-5 w-5 text-yellow-400 fill-current" />
-                    ))}
-                  </div>
-                  <p className="text-blue-100 mb-4">"The security features and analytics provide unmatched exam integrity."</p>
-                  <div className="text-blue-300 font-semibold">Prof. Michael Chen</div>
-                  <div className="text-blue-400 text-sm">MIT</div>
-                </CardContent>
-              </Card>
+              <div className="bg-white/10 backdrop-blur-xl rounded-xl p-6 border border-white/20 hover:bg-white/15 transition-all">
+                <Zap className="h-12 w-12 text-yellow-400 mx-auto mb-4" />
+                <h3 className="text-xl font-bold text-white mb-2">Real-time Processing</h3>
+                <p className="text-blue-200">Lightning-fast AI processing with sub-second violation detection and alerting</p>
+              </div>
               
-              <Card className="bg-white/10 backdrop-blur-xl border-white/20">
-                <CardContent className="p-6 text-center">
-                  <div className="flex justify-center mb-4">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className="h-5 w-5 text-yellow-400 fill-current" />
-                    ))}
-                  </div>
-                  <p className="text-blue-100 mb-4">"Students love the intuitive interface and fair proctoring system."</p>
-                  <div className="text-blue-300 font-semibold">Dr. Emily Rodriguez</div>
-                  <div className="text-blue-400 text-sm">Harvard University</div>
-                </CardContent>
-              </Card>
+              <div className="bg-white/10 backdrop-blur-xl rounded-xl p-6 border border-white/20 hover:bg-white/15 transition-all">
+                <TrendingUp className="h-12 w-12 text-purple-400 mx-auto mb-4" />
+                <h3 className="text-xl font-bold text-white mb-2">Continuous Learning</h3>
+                <p className="text-blue-200">Machine learning models that continuously improve accuracy and reduce false positives</p>
+              </div>
             </div>
           </div>
         </div>

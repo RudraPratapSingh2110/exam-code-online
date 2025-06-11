@@ -12,6 +12,8 @@ import { Calendar, Clock, Users, Settings, ArrowLeft, Plus, Edit, Trash2, Eye, S
 import { useToast } from "@/hooks/use-toast";
 import { getExams, type Exam } from "@/lib/examStorage";
 
+type ExamType = 'multiple-choice' | 'essay' | 'mixed';
+
 interface ScheduledExam {
   id: string;
   examId?: string;
@@ -24,7 +26,7 @@ interface ScheduledExam {
   maxStudents: number;
   registeredStudents: number;
   status: 'scheduled' | 'active' | 'completed' | 'cancelled';
-  examType: 'multiple-choice' | 'essay' | 'mixed';
+  examType: ExamType;
   proctoring: boolean;
   autoGrading: boolean;
   allowRetake: boolean;
@@ -49,7 +51,7 @@ const ExamScheduler = ({ onBack }: ExamSchedulerProps) => {
     endDate: '',
     duration: 60,
     maxStudents: 50,
-    examType: 'multiple-choice' as const,
+    examType: 'multiple-choice' as ExamType,
     proctoring: true,
     autoGrading: true,
     allowRetake: false,
@@ -211,6 +213,30 @@ const ExamScheduler = ({ onBack }: ExamSchedulerProps) => {
     return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
+  const handleActivateExam = (examId: string) => {
+    const updatedExams = scheduledExams.map(e => 
+      e.id === examId ? { ...e, status: 'active' as const } : e
+    );
+    saveScheduledExams(updatedExams);
+    
+    toast({
+      title: "Exam Activated!",
+      description: "Students can now join the exam",
+    });
+  };
+
+  const handleCompleteExam = (examId: string) => {
+    const updatedExams = scheduledExams.map(e => 
+      e.id === examId ? { ...e, status: 'completed' as const } : e
+    );
+    saveScheduledExams(updatedExams);
+    
+    toast({
+      title: "Exam Completed!",
+      description: "Exam has been marked as completed",
+    });
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
       <div className="container mx-auto px-4 py-8">
@@ -273,7 +299,7 @@ const ExamScheduler = ({ onBack }: ExamSchedulerProps) => {
                 
                 <div className="space-y-2">
                   <Label htmlFor="examType">Exam Type</Label>
-                  <Select value={newExam.examType} onValueChange={(value: any) => setNewExam({ ...newExam, examType: value })}>
+                  <Select value={newExam.examType} onValueChange={(value: ExamType) => setNewExam({ ...newExam, examType: value })}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -496,7 +522,27 @@ const ExamScheduler = ({ onBack }: ExamSchedulerProps) => {
                       </div>
                     </div>
                     
-                    <div className="flex items-center gap-3">
+                    <div className="flex flex-col gap-2">
+                      {exam.status === 'scheduled' && (
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => handleActivateExam(exam.id)}
+                          className="w-full"
+                        >
+                          Activate
+                        </Button>
+                      )}
+                      {exam.status === 'active' && (
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => handleCompleteExam(exam.id)}
+                          className="w-full"
+                        >
+                          Complete
+                        </Button>
+                      )}
                       <Button variant="outline" size="sm" className="w-full">
                         <Settings className="h-4 w-4 mr-2" />
                         Manage

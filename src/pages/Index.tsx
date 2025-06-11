@@ -2,28 +2,17 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Shield, Camera, Brain, BarChart3, BookOpen, Users, GraduationCap, UserPlus, LogIn, Eye, Clock, CheckCircle, Award, Lock, Zap } from "lucide-react";
+import { Shield, Camera, Brain, BarChart3, BookOpen, Users, GraduationCap, UserPlus, LogIn, Eye, Clock, CheckCircle, Award, Lock, Zap } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { useToast } from "@/hooks/use-toast";
-import ExamCreator from "@/components/ExamCreator";
-import QuestionBank from "@/components/QuestionBank";
-import AnalyticsDashboard from "@/components/AnalyticsDashboard";
-import { type Exam } from "@/lib/examStorage";
+import { useAuth } from "@/components/auth/AuthProvider";
+import LoginForm from "@/components/auth/LoginForm";
+import ExaminerDashboard from "@/components/ExaminerDashboard";
+import StudentDashboard from "@/components/StudentDashboard";
 
 const Index = () => {
-  const [currentView, setCurrentView] = useState<'home' | 'examCreator' | 'questionBank' | 'analytics'>('home');
-  const [showAuthDialog, setShowAuthDialog] = useState(false);
-  const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
-  const [userType, setUserType] = useState<'teacher' | 'student'>('teacher');
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [user, setUser] = useState<{ name: string; email: string; type: 'teacher' | 'student' } | null>(null);
-  const { toast } = useToast();
+  const [showLoginForm, setShowLoginForm] = useState(false);
+  const { user, logout } = useAuth();
 
   // ML Model accuracy data - February to June
   const mlAccuracyData = [
@@ -34,60 +23,18 @@ const Index = () => {
     { month: 'Jun', accuracy: 99.1, violations: 76 },
   ];
 
-  const handleAuth = (formData: any) => {
-    const userData = {
-      name: formData.name || `${userType} User`,
-      email: formData.email,
-      type: userType
-    };
-    
-    setUser(userData);
-    setIsAuthenticated(true);
-    setShowAuthDialog(false);
-    
-    toast({
-      title: authMode === 'signin' ? "Welcome back!" : "Account created successfully!",
-      description: `You are now logged in as a ${userType}.`,
-    });
-  };
-
-  const handleLogout = () => {
-    setUser(null);
-    setIsAuthenticated(false);
-    setCurrentView('home');
-    toast({
-      title: "Logged out",
-      description: "You have been successfully logged out.",
-    });
-  };
-
-  const handleExamCreated = (exam: Exam) => {
-    toast({
-      title: "Exam Created!",
-      description: `Exam "${exam.title}" has been created successfully.`,
-    });
-    setCurrentView('home');
-  };
-
-  if (currentView === 'examCreator') {
-    return (
-      <ExamCreator 
-        onExamCreated={handleExamCreated}
-        onCancel={() => setCurrentView('home')}
-      />
-    );
+  // Show login form if not authenticated
+  if (!user && showLoginForm) {
+    return <LoginForm onSuccess={() => setShowLoginForm(false)} />;
   }
 
-  if (currentView === 'questionBank') {
-    return (
-      <QuestionBank onBack={() => setCurrentView('home')} />
-    );
-  }
-
-  if (currentView === 'analytics') {
-    return (
-      <AnalyticsDashboard onBack={() => setCurrentView('home')} />
-    );
+  // Show role-specific dashboard if authenticated
+  if (user) {
+    if (user.role === 'examiner') {
+      return <ExaminerDashboard onBack={logout} />;
+    } else if (user.role === 'student') {
+      return <StudentDashboard onBack={logout} />;
+    }
   }
 
   return (
@@ -101,51 +48,20 @@ const Index = () => {
               <span className="text-2xl font-bold text-gray-800">ProctMe</span>
             </div>
             <div className="flex items-center space-x-4">
-              {isAuthenticated ? (
-                <>
-                  <span className="text-sm text-gray-600">Welcome, {user?.name}</span>
-                  <Button variant="outline" onClick={handleLogout}>
-                    Logout
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <Dialog open={showAuthDialog} onOpenChange={setShowAuthDialog}>
-                    <DialogTrigger asChild>
-                      <Button 
-                        variant="outline" 
-                        onClick={() => {
-                          setAuthMode('signin');
-                          setShowAuthDialog(true);
-                        }}
-                      >
-                        <LogIn className="h-4 w-4 mr-2" />
-                        Sign In
-                      </Button>
-                    </DialogTrigger>
-                    <AuthDialog 
-                      mode={authMode} 
-                      userType={userType}
-                      onAuth={handleAuth}
-                      onModeChange={setAuthMode}
-                      onUserTypeChange={setUserType}
-                    />
-                  </Dialog>
-                  <Dialog open={showAuthDialog} onOpenChange={setShowAuthDialog}>
-                    <DialogTrigger asChild>
-                      <Button 
-                        onClick={() => {
-                          setAuthMode('signup');
-                          setShowAuthDialog(true);
-                        }}
-                      >
-                        <UserPlus className="h-4 w-4 mr-2" />
-                        Sign Up
-                      </Button>
-                    </DialogTrigger>
-                  </Dialog>
-                </>
-              )}
+              <Button 
+                variant="outline" 
+                onClick={() => setShowLoginForm(true)}
+              >
+                <LogIn className="h-4 w-4 mr-2" />
+                Sign In
+              </Button>
+              <Button 
+                onClick={() => setShowLoginForm(true)}
+                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+              >
+                <UserPlus className="h-4 w-4 mr-2" />
+                Sign Up
+              </Button>
             </div>
           </div>
         </div>
@@ -164,17 +80,18 @@ const Index = () => {
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <Button 
               size="lg" 
-              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-4 text-lg"
-              onClick={() => {
-                if (isAuthenticated) {
-                  setCurrentView('examCreator');
-                } else {
-                  setShowAuthDialog(true);
-                  setAuthMode('signup');
-                }
-              }}
+              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-12 py-6 text-xl"
+              onClick={() => setShowLoginForm(true)}
             >
               Get Started
+            </Button>
+            <Button 
+              size="lg"
+              variant="outline"
+              className="px-12 py-6 text-xl border-2 border-blue-600 text-blue-600 hover:bg-blue-50"
+              onClick={() => setShowLoginForm(true)}
+            >
+              Sign Up Now
             </Button>
           </div>
         </div>
@@ -312,174 +229,70 @@ const Index = () => {
           </Card>
         </div>
 
-        {/* Dashboard Features */}
-        {isAuthenticated && (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
-            <Card 
-              className="bg-white/80 backdrop-blur border-0 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer"
-              onClick={() => setCurrentView('examCreator')}
-            >
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <BookOpen className="h-6 w-6 text-blue-600" />
-                  </div>
-                  <Badge variant="secondary">New</Badge>
-                </div>
-                <CardTitle>Create Exam</CardTitle>
-                <CardDescription>
-                  Design new examinations with custom questions and settings
-                </CardDescription>
-              </CardHeader>
-            </Card>
+        {/* Role-based Information Cards */}
+        <div className="grid md:grid-cols-2 gap-8 mb-16">
+          <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200 shadow-lg">
+            <CardHeader>
+              <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mb-4 mx-auto">
+                <GraduationCap className="h-8 w-8 text-white" />
+              </div>
+              <CardTitle className="text-center text-blue-800">For Teachers & Examiners</CardTitle>
+              <CardDescription className="text-center text-blue-700">
+                Complete exam management and proctoring control
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex items-center gap-3 text-blue-700">
+                <CheckCircle className="h-5 w-5" />
+                <span>Create and manage examinations</span>
+              </div>
+              <div className="flex items-center gap-3 text-blue-700">
+                <CheckCircle className="h-5 w-5" />
+                <span>Real-time student monitoring</span>
+              </div>
+              <div className="flex items-center gap-3 text-blue-700">
+                <CheckCircle className="h-5 w-5" />
+                <span>Advanced analytics and reports</span>
+              </div>
+              <div className="flex items-center gap-3 text-blue-700">
+                <CheckCircle className="h-5 w-5" />
+                <span>Question bank management</span>
+              </div>
+            </CardContent>
+          </Card>
 
-            <Card 
-              className="bg-white/80 backdrop-blur border-0 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer"
-              onClick={() => setCurrentView('questionBank')}
-            >
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                    <Users className="h-6 w-6 text-green-600" />
-                  </div>
-                </div>
-                <CardTitle>Question Bank</CardTitle>
-                <CardDescription>
-                  Manage and organize your examination questions
-                </CardDescription>
-              </CardHeader>
-            </Card>
-
-            <Card 
-              className="bg-white/80 backdrop-blur border-0 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer"
-              onClick={() => setCurrentView('analytics')}
-            >
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                    <BarChart3 className="h-6 w-6 text-purple-600" />
-                  </div>
-                  <Badge variant="secondary">Analytics</Badge>
-                </div>
-                <CardTitle>Analytics Dashboard</CardTitle>
-                <CardDescription>
-                  View comprehensive exam and performance analytics
-                </CardDescription>
-              </CardHeader>
-            </Card>
-          </div>
-        )}
+          <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200 shadow-lg">
+            <CardHeader>
+              <div className="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mb-4 mx-auto">
+                <Users className="h-8 w-8 text-white" />
+              </div>
+              <CardTitle className="text-center text-green-800">For Students</CardTitle>
+              <CardDescription className="text-center text-green-700">
+                Secure and monitored examination experience
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex items-center gap-3 text-green-700">
+                <Award className="h-5 w-5" />
+                <span>Join exams with unique codes</span>
+              </div>
+              <div className="flex items-center gap-3 text-green-700">
+                <Award className="h-5 w-5" />
+                <span>Secure proctored environment</span>
+              </div>
+              <div className="flex items-center gap-3 text-green-700">
+                <Award className="h-5 w-5" />
+                <span>Instant results and feedback</span>
+              </div>
+              <div className="flex items-center gap-3 text-green-700">
+                <Award className="h-5 w-5" />
+                <span>Performance tracking</span>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
-  );
-};
-
-// Auth Dialog Component
-const AuthDialog = ({ mode, userType, onAuth, onModeChange, onUserTypeChange }: {
-  mode: 'signin' | 'signup';
-  userType: 'teacher' | 'student';
-  onAuth: (data: any) => void;
-  onModeChange: (mode: 'signin' | 'signup') => void;
-  onUserTypeChange: (type: 'teacher' | 'student') => void;
-}) => {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    institution: ''
-  });
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onAuth(formData);
-  };
-
-  return (
-    <DialogContent className="sm:max-w-md">
-      <DialogHeader>
-        <DialogTitle>
-          {mode === 'signin' ? 'Sign In' : 'Create Account'}
-        </DialogTitle>
-        <DialogDescription>
-          {mode === 'signin' 
-            ? 'Welcome back! Please enter your credentials.' 
-            : 'Join ProctMe and start creating secure online examinations.'
-          }
-        </DialogDescription>
-      </DialogHeader>
-      
-      <Tabs value={userType} onValueChange={(value) => onUserTypeChange(value as 'teacher' | 'student')}>
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="teacher">Teacher</TabsTrigger>
-          <TabsTrigger value="student">Student</TabsTrigger>
-        </TabsList>
-        
-        <form onSubmit={handleSubmit} className="space-y-4 mt-4">
-          {mode === 'signup' && (
-            <div>
-              <Label htmlFor="name">Full Name</Label>
-              <Input
-                id="name"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                required
-              />
-            </div>
-          )}
-          
-          <div>
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              required
-            />
-          </div>
-          
-          <div>
-            <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              type="password"
-              value={formData.password}
-              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-              required
-            />
-          </div>
-          
-          {mode === 'signup' && userType === 'teacher' && (
-            <div>
-              <Label htmlFor="institution">Institution</Label>
-              <Input
-                id="institution"
-                value={formData.institution}
-                onChange={(e) => setFormData({ ...formData, institution: e.target.value })}
-                placeholder="Your school or university"
-              />
-            </div>
-          )}
-          
-          <Button type="submit" className="w-full">
-            {mode === 'signin' ? 'Sign In' : 'Create Account'}
-          </Button>
-          
-          <div className="text-center">
-            <Button 
-              type="button" 
-              variant="link" 
-              onClick={() => onModeChange(mode === 'signin' ? 'signup' : 'signin')}
-            >
-              {mode === 'signin' 
-                ? "Don't have an account? Sign up" 
-                : "Already have an account? Sign in"
-              }
-            </Button>
-          </div>
-        </form>
-      </Tabs>
-    </DialogContent>
   );
 };
 

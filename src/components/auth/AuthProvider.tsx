@@ -58,8 +58,36 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     setIsLoading(true);
     
     try {
-      // In a real app, this would be an API call
-      // For demo purposes, we'll use predefined credentials
+      // Check registered users first
+      const registeredUsers = JSON.parse(localStorage.getItem('proctme_users') || '[]');
+      const registeredUser = registeredUsers.find((user: any) => 
+        user.email === email && user.password === password && user.role === role
+      );
+
+      if (registeredUser) {
+        const userData: User = {
+          id: registeredUser.id,
+          email: registeredUser.email,
+          name: registeredUser.name,
+          role: registeredUser.role,
+          createdAt: registeredUser.createdAt
+        };
+
+        const token = `jwt_token_${Date.now()}_${Math.random()}`;
+        
+        localStorage.setItem('proctme_user', JSON.stringify(userData));
+        localStorage.setItem('proctme_token', token);
+        setUser(userData);
+
+        toast({
+          title: "Login Successful",
+          description: `Welcome back, ${userData.name}!`,
+        });
+
+        return true;
+      }
+
+      // Fallback to demo credentials for backward compatibility
       const validCredentials = {
         examiner: { email: 'examiner@proctme.com', password: 'examiner123' },
         student: { email: 'student@proctme.com', password: 'student123' }
@@ -93,7 +121,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       } else {
         toast({
           title: "Login Failed",
-          description: "Invalid email or password",
+          description: "Invalid email, password, or role",
           variant: "destructive"
         });
         return false;

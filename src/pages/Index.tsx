@@ -7,11 +7,13 @@ import { Shield, Camera, Brain, BarChart3, BookOpen, Users, GraduationCap, UserP
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useAuth } from "@/components/auth/AuthProvider";
 import LoginForm from "@/components/auth/LoginForm";
+import SignUpForm from "@/components/auth/SignUpForm";
 import ExaminerDashboard from "@/components/ExaminerDashboard";
 import StudentDashboard from "@/components/StudentDashboard";
 
 const Index = () => {
   const [showLoginForm, setShowLoginForm] = useState(false);
+  const [showSignUpForm, setShowSignUpForm] = useState(false);
   const { user, logout } = useAuth();
 
   // ML Model accuracy data - February to June
@@ -23,9 +25,26 @@ const Index = () => {
     { month: 'Jun', accuracy: 99.1, violations: 76 },
   ];
 
-  // Show login form if not authenticated
-  if (!user && showLoginForm) {
-    return <LoginForm onSuccess={() => setShowLoginForm(false)} />;
+  // Show login form if requested
+  if (showLoginForm) {
+    return <LoginForm 
+      onSuccess={() => setShowLoginForm(false)} 
+      onSwitchToSignUp={() => {
+        setShowLoginForm(false);
+        setShowSignUpForm(true);
+      }}
+    />;
+  }
+
+  // Show signup form if requested
+  if (showSignUpForm) {
+    return <SignUpForm 
+      onSuccess={() => setShowSignUpForm(false)}
+      onSwitchToSignIn={() => {
+        setShowSignUpForm(false);
+        setShowLoginForm(true);
+      }}
+    />;
   }
 
   // Show role-specific dashboard if authenticated
@@ -56,7 +75,7 @@ const Index = () => {
                 Sign In
               </Button>
               <Button 
-                onClick={() => setShowLoginForm(true)}
+                onClick={() => setShowSignUpForm(true)}
                 className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
               >
                 <UserPlus className="h-4 w-4 mr-2" />
@@ -83,15 +102,17 @@ const Index = () => {
               className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-12 py-6 text-xl"
               onClick={() => setShowLoginForm(true)}
             >
-              Get Started
+              <LogIn className="h-5 w-5 mr-2" />
+              Sign In
             </Button>
             <Button 
               size="lg"
               variant="outline"
               className="px-12 py-6 text-xl border-2 border-blue-600 text-blue-600 hover:bg-blue-50"
-              onClick={() => setShowLoginForm(true)}
+              onClick={() => setShowSignUpForm(true)}
             >
-              Sign Up Now
+              <UserPlus className="h-5 w-5 mr-2" />
+              Sign Up
             </Button>
           </div>
         </div>

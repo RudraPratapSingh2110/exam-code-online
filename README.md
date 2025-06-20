@@ -1,194 +1,204 @@
 
-# ProctMe - Advanced Online Examination & Proctoring Platform
+# ProctMe - AI-Powered Online Examination Platform
 
-## 🏗️ System Architecture
+## 🚀 What is ProctMe?
 
-### Overview
-ProctMe is a comprehensive online examination platform with AI-powered proctoring capabilities, designed for educational institutions and organizations requiring secure, monitored assessments.
+ProctMe is a smart online exam platform that helps teachers create and monitor exams while ensuring students take them fairly. It uses AI technology to watch students during exams and detect any cheating attempts.
 
-### Technology Stack
-- **Frontend**: React 18 + TypeScript + Vite
-- **Styling**: Tailwind CSS + shadcn/ui components
-- **State Management**: React Query + Local State
-- **Authentication**: JWT-based authentication with role-based access
-- **Database**: Browser LocalStorage (Production: Supabase recommended)
-- **AI Features**: Web APIs (Camera, Microphone, Tab Detection)
-- **Routing**: React Router DOM
+## 🎯 Key Features
 
-## 📊 Data Flow Architecture
-
-### 1. Authentication Flow
-```
-User Login → JWT Validation → Role Check → Dashboard Access
-     ↓
-Examiner Role → Exam Management Dashboard
-Student Role → Student Portal
-```
-
-### 2. Exam Creation Flow
-```
-Examiner Login → Authentication → Create Exam → Question Bank → 
-Schedule Exam → Generate Access Code → Student Registration
-```
-
-### 3. Exam Taking Flow
-```
-Student Access → Code Validation → Identity Verification → 
-AI Proctoring Setup → Exam Interface → Real-time Monitoring → 
-Violation Detection → Auto/Manual Submit → Results Processing
-```
-
-### 4. Data Storage Architecture
-```
-User Data
-├── Authentication (JWT Tokens, User Profiles)
-├── Exams (Metadata, Questions, Settings)
-├── Submissions (Answers, Scores, Timestamps)
-├── Proctoring Data (Violations, Media Logs)
-└── Analytics (Performance Metrics, Reports)
-```
-
-## 🛡️ Security Architecture
-
-### Authentication Layers
-1. **JWT Token Authentication**: Secure token-based auth
-2. **Role-Based Access Control**: Examiner/Student permissions
-3. **Exam Code Validation**: Unique access codes per exam
-4. **Session Management**: Automatic logout and session tracking
-
-### Proctoring Security
-1. **Multi-Modal Monitoring**: Face, voice, tab detection
-2. **Real-time Violation Tracking**: Immediate alerts
-3. **Data Encryption**: Sensitive data protection
-4. **Audit Trails**: Complete examination logs
-
-## 🚀 Core Features
-
-### For Examiners
-- **Secure Authentication**: Multi-factor login system
-- **Exam Management**: Create, edit, schedule, monitor exams
-- **Question Bank**: Centralized question repository
-- **Real-time Monitoring**: Live student tracking
-- **Advanced Analytics**: Performance insights and reports
-- **Proctoring Controls**: AI-powered supervision settings
+### For Teachers
+- **Create Exams**: Build custom exams with multiple-choice questions
+- **Question Bank**: Store and reuse questions for future exams
+- **Real-time Monitoring**: Watch students take exams live
+- **AI Proctoring**: Automatic cheating detection
+- **Analytics**: View detailed reports and statistics
+- **Scheduling**: Set exam dates and times
 
 ### For Students
-- **Easy Access**: Simple exam code entry
-- **Guided Interface**: Intuitive exam-taking experience
-- **Progress Tracking**: Real-time progress indicators
-- **Multi-device Support**: Responsive design
-- **Accessibility**: Screen reader and keyboard navigation
+- **Easy Access**: Join exams using simple access codes
+- **Fair Testing**: Clean, distraction-free exam interface
+- **Instant Results**: Get scores immediately after submission
+- **Progress Tracking**: See your progress during the exam
 
-### AI Proctoring Features
-- **Face Detection**: Multiple person detection
-- **Tab Switching**: Browser focus monitoring
-- **Voice Detection**: Unauthorized communication alerts
-- **Behavioral Analysis**: Suspicious activity patterns
-- **Violation Reporting**: Comprehensive incident logs
+## 🤖 How AI Proctoring Works (In Simple Terms)
 
-## 📱 User Interface Architecture
+The AI proctoring system acts like a digital supervisor that watches students during exams:
 
-### Component Structure
+### 1. **Face Detection**
+- Uses your camera to make sure only you are taking the exam
+- Alerts if no face is detected (you left your seat)
+- Warns if multiple faces are detected (someone is helping you)
+
+### 2. **Tab Switching Detection**
+- Monitors if you switch to other browser tabs or applications
+- Prevents students from googling answers or using other resources
+- Automatically records violations
+
+### 3. **Voice Detection**
+- Listens for voices or conversations during the exam
+- Detects if someone is giving you answers verbally
+- Records audio violations
+
+### 4. **Automatic Actions**
+- Collects all violations and creates a report
+- Can automatically submit exam if too many violations occur
+- Provides detailed reports to teachers
+
+## 📁 Project Structure Explained
+
 ```
 src/
-├── components/
-│   ├── auth/              # Authentication components
-│   ├── dashboard/         # Dashboard interfaces
-│   ├── exam/             # Exam-related components
-│   ├── proctoring/       # AI proctoring features
-│   ├── scheduling/       # Exam scheduling
-│   └── ui/               # Reusable UI components
-├── pages/                # Route components
-├── hooks/                # Custom React hooks
-├── lib/                  # Utilities and services
-└── types/                # TypeScript definitions
+├── components/           # Reusable UI pieces
+│   ├── auth/            # Login and signup forms
+│   ├── ui/              # Basic UI components (buttons, cards, etc.)
+│   ├── AIProctoring.tsx      # AI monitoring system
+│   ├── ExamCreator.tsx       # Tool for teachers to create exams
+│   ├── ExamTaking.tsx        # Interface for students taking exams
+│   ├── ExamResults.tsx       # Shows exam results
+│   └── ProctoringReport.tsx  # Detailed AI violation reports
+├── pages/               # Main application pages
+│   └── Index.tsx        # Landing page with login/signup
+├── lib/                 # Helper functions and storage
+│   └── examStorage.ts   # Saves exams and results locally
+└── hooks/               # Custom React functionality
 ```
 
-## 🔄 State Management
+## 🔧 How Each Component Works
 
-### Data Flow
-1. **Authentication State**: JWT tokens, user roles
-2. **Exam State**: Active exams, questions, submissions
-3. **Proctoring State**: Violation logs, monitoring status
-4. **UI State**: Navigation, modals, notifications
-
-## 📈 Performance Optimization
-
-### Frontend Optimization
-- **Code Splitting**: Route-based lazy loading
-- **Component Memoization**: React.memo and useMemo
-- **Image Optimization**: Lazy loading and compression
-- **Bundle Analysis**: Webpack bundle analyzer
-
-### Monitoring & Analytics
-- **Real-time Metrics**: Exam performance tracking
-- **Error Monitoring**: Frontend error logging
-- **Usage Analytics**: User interaction patterns
-- **Performance Metrics**: Load times and responsiveness
-
-## 🚀 Deployment Architecture
-
-### Development Environment
-```bash
-npm run dev          # Development server
-npm run build        # Production build
-npm run preview      # Preview production build
-```
-
-### Production Deployment
-- **Static Hosting**: Vercel, Netlify, or custom CDN
-- **Database**: Supabase for production data storage
-- **Authentication**: Supabase Auth or custom JWT service
-- **File Storage**: Supabase Storage for media files
-
-## 🔧 Configuration
-
-### Environment Variables
-```
-VITE_APP_NAME=ProctMe
-VITE_API_URL=your_api_endpoint
-VITE_SUPABASE_URL=your_supabase_url
-VITE_SUPABASE_ANON_KEY=your_supabase_key
-```
-
-## 📚 API Documentation
-
-### Authentication Endpoints
-- `POST /auth/login` - Examiner login
-- `POST /auth/logout` - User logout
-- `GET /auth/profile` - User profile
-- `PUT /auth/profile` - Update profile
+### Authentication System (`auth/`)
+- **LoginForm.tsx**: Where users enter email/password to sign in
+- **SignUpForm.tsx**: Where new users create accounts
+- **AuthProvider.tsx**: Manages user login status throughout the app
 
 ### Exam Management
-- `GET /exams` - List exams
-- `POST /exams` - Create exam
-- `PUT /exams/:id` - Update exam
-- `DELETE /exams/:id` - Delete exam
+- **ExamCreator.tsx**: Teachers use this to build new exams
+  - Add questions with multiple choice answers
+  - Set time limits and point values
+  - Choose which answer is correct
 
-### Student Interface
-- `POST /exams/join` - Join exam by code
-- `POST /submissions` - Submit exam
-- `GET /submissions/:id` - Get submission
+- **QuestionBank.tsx**: Library where teachers store reusable questions
+- **ExamScheduler.tsx**: Set when exams should be available
 
-## 🤝 Contributing
+### Student Experience
+- **StudentInterface.tsx**: Main page for students
+  - Enter exam codes to join exams
+  - View available exams
 
-1. Fork the repository
-2. Create feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit changes (`git commit -m 'Add amazing feature'`)
-4. Push to branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+- **ExamTaking.tsx**: The actual exam interface
+  - Shows questions one by one
+  - Timer counting down
+  - AI proctoring active during exam
 
-## 📄 License
+### AI Proctoring System
+- **AIProctoring.tsx**: The "digital supervisor"
+  - Activates camera and microphone
+  - Monitors face detection
+  - Watches for tab switching
+  - Records all violations
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+- **ProctoringReport.tsx**: Detailed report for teachers
+  - Shows all violations that occurred
+  - Risk assessment (low/medium/high)
+  - Recommendations for manual review
 
-## 🆘 Support
+### Analytics & Monitoring
+- **AnalyticsDashboard.tsx**: Statistics and charts for teachers
+- **ExamMonitor.tsx**: Live monitoring of ongoing exams
+- **ExamResults.tsx**: Individual student results
 
-For support and questions:
-- Documentation: [docs.proctme.com](https://docs.proctme.com)
-- Issues: [GitHub Issues](https://github.com/your-org/proctme/issues)
-- Community: [Discord Server](https://discord.gg/proctme)
+## 🏗️ How Everything Connects
+
+1. **Teacher Journey**:
+   - Sign up/Login → Teacher Dashboard → Create Exam → Monitor Students → View Reports
+
+2. **Student Journey**:
+   - Sign up/Login → Enter Exam Code → Take Exam with AI Monitoring → View Results
+
+3. **Data Flow**:
+   - All data stored locally in browser (localStorage)
+   - In production, would connect to a real database
+   - AI monitoring data sent to teacher reports
+
+## 🧠 AI Technology Simplified
+
+### Face Detection
+```javascript
+// Simplified explanation:
+1. Camera captures video feed
+2. AI analyzes each frame for faces
+3. Counts: 0 faces = student left, 2+ faces = getting help
+4. Reports violations to teacher
+```
+
+### Tab Monitoring
+```javascript
+// How it works:
+1. Browser API detects when tab loses focus
+2. Records timestamp of switch
+3. Counts total switches
+4. High switches = high risk of cheating
+```
+
+### Voice Detection
+```javascript
+// Audio monitoring:
+1. Microphone captures audio
+2. Analyzes sound levels
+3. Detects human voice patterns
+4. Records when voices detected during exam
+```
+
+## 🚀 Getting Started
+
+### For Development
+1. Clone the project
+2. Run `npm install` to install dependencies
+3. Run `npm run dev` to start development server
+4. Open `http://localhost:5173` in your browser
+
+### For Teachers
+1. Click "Sign Up" on homepage
+2. Choose "Teacher/Examiner" role
+3. Create your account
+4. Start creating exams!
+
+### For Students
+1. Click "Sign Up" on homepage
+2. Choose "Student" role
+3. Create your account
+4. Get exam codes from your teacher
+
+## 🔒 Privacy & Security
+
+- **Camera/Microphone**: Only used during exams with student permission
+- **Data Storage**: All data stored locally in browser (not sent to external servers)
+- **Violation Records**: Only visible to teachers, not shared publicly
+- **Student Privacy**: No personal conversations recorded, only exam violations
+
+## 🎨 Technologies Used
+
+- **React**: For building user interfaces
+- **TypeScript**: For safer, more reliable code
+- **Tailwind CSS**: For styling and design
+- **Web APIs**: For camera, microphone, and tab detection
+- **Local Storage**: For saving data in browser
+
+## 🤝 Support
+
+If you need help:
+1. Check this README for common questions
+2. Look at the code comments for technical details
+3. Test with demo accounts (examiner@proctme.com / student@proctme.com)
+
+## 📈 Future Enhancements
+
+- Connect to real database (Supabase)
+- Advanced AI features (emotion detection, eye tracking)
+- Mobile app support
+- Integration with school systems
+- Automated grading for essay questions
 
 ---
 
-**ProctMe** - Secure, Intelligent, Reliable Online Examination Platform
+**ProctMe** - Making online exams fair and secure with AI technology! 🎓✨

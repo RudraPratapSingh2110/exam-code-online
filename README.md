@@ -23,6 +23,307 @@ ProctMe is a cutting-edge online examination platform that leverages artificial 
 - **Instant Result Delivery**: Immediate score feedback upon exam completion
 - **Fair Testing Assurance**: Transparent proctoring process with clear guidelines
 
+## 📁 Complete File Structure and Functions
+
+### Root Configuration Files
+
+#### `package.json`
+- **Purpose**: Project configuration and dependency management
+- **Function**: Defines all npm packages, scripts, and project metadata
+- **Key Dependencies**: React, TypeScript, Vite, Tailwind CSS, Shadcn/UI components
+
+#### `vite.config.ts`
+- **Purpose**: Vite build tool configuration
+- **Function**: Configures development server, build process, and optimization settings
+- **Features**: Fast HMR (Hot Module Replacement), TypeScript support, path aliases
+
+#### `tailwind.config.ts`
+- **Purpose**: Tailwind CSS configuration
+- **Function**: Customizes design system, colors, spacing, and responsive breakpoints
+- **Extensions**: Custom animations, shadcn/ui integration, dark mode support
+
+#### `tsconfig.json` & `tsconfig.app.json` & `tsconfig.node.json`
+- **Purpose**: TypeScript compiler configuration
+- **Function**: Type checking rules, module resolution, and compilation settings
+- **Benefits**: Strict type safety, better developer experience, compile-time error detection
+
+#### `eslint.config.js`
+- **Purpose**: Code quality and style enforcement
+- **Function**: Linting rules for consistent code formatting and error prevention
+- **Standards**: React best practices, TypeScript rules, accessibility guidelines
+
+#### `postcss.config.js`
+- **Purpose**: CSS processing configuration
+- **Function**: Autoprefixer, Tailwind CSS processing, and CSS optimization
+- **Output**: Cross-browser compatible CSS with vendor prefixes
+
+### Core Application Files
+
+#### `src/main.tsx`
+- **Purpose**: Application entry point
+- **Function**: React DOM rendering, global providers setup, and initial app mounting
+- **Responsibilities**: Router setup, theme provider initialization, toast system
+
+#### `src/App.tsx`
+- **Purpose**: Root application component
+- **Function**: Main routing logic, layout structure, and global state management
+- **Routes**: Authentication pages, dashboard routes, exam interfaces
+
+#### `src/App.css`
+- **Purpose**: Global styling and CSS variables
+- **Function**: Base styles, custom CSS properties, and component overrides
+- **Scope**: Application-wide styling that isn't covered by Tailwind
+
+#### `src/index.css`
+- **Purpose**: Tailwind CSS imports and global reset
+- **Function**: Tailwind directives, CSS reset, and foundational styling
+- **Structure**: Base layer, components layer, utilities layer
+
+### Page Components (`src/pages/`)
+
+#### `src/pages/Index.tsx`
+- **Purpose**: Landing page and main entry point
+- **Function**: User authentication options (Sign In/Sign Up), application introduction
+- **Features**: Role-based navigation, responsive design, hero section
+- **Navigation**: Routes to login/signup forms based on user selection
+
+#### `src/pages/NotFound.tsx`
+- **Purpose**: 404 error page handler
+- **Function**: Displays user-friendly error message for invalid routes
+- **Features**: Navigation back to home, error reporting, search functionality
+
+### Authentication System (`src/components/auth/`)
+
+#### `src/components/auth/AuthProvider.tsx`
+- **Purpose**: Global authentication state management
+- **Function**: User session handling, role-based access control, token management
+- **State Management**: Current user data, authentication status, role permissions
+- **Storage**: LocalStorage integration for session persistence
+- **Methods**: `login()`, `logout()`, `register()`, `getCurrentUser()`
+
+#### `src/components/auth/LoginForm.tsx`
+- **Purpose**: User login interface
+- **Function**: Credential validation, role selection, authentication flow
+- **Form Fields**: Email, password, role selection (student/teacher)
+- **Validation**: Real-time form validation with error messages
+- **Integration**: AuthProvider for state updates, routing after successful login
+
+#### `src/components/auth/SignUpForm.tsx`
+- **Purpose**: New user registration interface
+- **Function**: Account creation, credential storage, initial setup
+- **Form Fields**: Name, email, password, confirm password, role selection
+- **Validation**: Password strength, email format, duplicate checking
+- **Features**: Terms acceptance, automatic login after registration
+
+### Core Examination Components (`src/components/`)
+
+#### `src/components/ExamCreator.tsx`
+- **Purpose**: Exam building interface for teachers
+- **Function**: Question creation, exam configuration, publishing workflow
+- **Features**:
+  - Dynamic question addition/removal
+  - Multiple choice, true/false, essay question types
+  - Time limit settings and attempt restrictions
+  - Preview mode for exam testing
+  - Save as draft functionality
+- **Data Management**: Local storage for draft exams, validation before publishing
+
+#### `src/components/ExamTaking.tsx`
+- **Purpose**: Student exam interface
+- **Function**: Secure exam environment, answer submission, progress tracking
+- **Features**:
+  - Full-screen mode enforcement
+  - Auto-save functionality every 30 seconds
+  - Timer with visual countdown
+  - Question navigation with review flags
+  - Final submission with confirmation dialog
+- **Security**: Tab switching detection, copy-paste prevention
+
+#### `src/components/ExamResults.tsx`
+- **Purpose**: Exam result display and analysis
+- **Function**: Score calculation, answer review, performance insights
+- **Teacher View**: Class statistics, individual student performance, grade distribution
+- **Student View**: Personal score, correct/incorrect answers, time analysis
+- **Export**: PDF reports, CSV data export for further analysis
+
+#### `src/components/AIProctoring.tsx`
+- **Purpose**: Core AI monitoring system
+- **Function**: Real-time behavior analysis, violation detection, evidence collection
+- **AI Features**:
+  - Face detection using computer vision algorithms
+  - Audio monitoring for voice detection
+  - Tab switching and window focus tracking
+  - Mouse movement pattern analysis
+  - Automated violation classification
+- **Real-time Processing**: WebRTC camera/microphone access, Canvas API for image processing
+
+#### `src/components/ProctoringReport.tsx`
+- **Purpose**: Violation analysis and reporting
+- **Function**: AI-generated incident reports, evidence review, decision support
+- **Report Sections**:
+  - Executive summary with risk assessment
+  - Detailed violation timeline
+  - Evidence gallery (screenshots, audio clips)
+  - Recommended actions based on severity
+  - Comparison with class average behavior
+
+#### `src/components/QuestionBank.tsx`
+- **Purpose**: Question repository management
+- **Function**: Question storage, categorization, reuse across multiple exams
+- **Features**:
+  - Question import/export (JSON, CSV formats)
+  - Tag-based categorization and filtering
+  - Difficulty level assignment
+  - Usage analytics and question performance
+  - Collaborative question sharing between teachers
+
+#### `src/components/AnalyticsDashboard.tsx`
+- **Purpose**: Comprehensive data visualization and insights
+- **Function**: Statistical analysis, trend identification, performance metrics
+- **Charts and Graphs**:
+  - Score distribution histograms
+  - Time-based performance trends
+  - Violation frequency analysis
+  - Comparative class performance
+  - Engagement metrics over time
+- **Technology**: Recharts library for interactive data visualization
+
+### Dashboard Components
+
+#### `src/components/StudentDashboard.tsx`
+- **Purpose**: Student home page and navigation center
+- **Function**: Upcoming exams, past results, profile management
+- **Sections**:
+  - Active exam invitations with countdown timers
+  - Recent exam results with performance insights
+  - Study resources and preparation materials
+  - Proctoring system test and calibration tools
+
+#### `src/components/ExaminerDashboard.tsx`
+- **Purpose**: Teacher control center
+- **Function**: Exam management, student monitoring, administrative tools
+- **Features**:
+  - Quick exam creation shortcuts
+  - Live exam monitoring with real-time student status
+  - Grading queue with AI-assisted scoring suggestions
+  - Class performance analytics and reporting tools
+
+#### `src/components/StudentInterface.tsx`
+- **Purpose**: Simplified student interaction layer
+- **Function**: Streamlined navigation, exam access, help resources
+- **User Experience**: Clean design focused on reducing test anxiety
+- **Accessibility**: Screen reader support, keyboard navigation, high contrast mode
+
+### Specialized Monitoring Components
+
+#### `src/components/ExamMonitor.tsx`
+- **Purpose**: Real-time exam supervision interface
+- **Function**: Live student monitoring, intervention tools, communication channels
+- **Monitoring Features**:
+  - Multi-student grid view with status indicators
+  - Individual student detailed monitoring
+  - Direct messaging and alert system
+  - Emergency exam termination controls
+
+#### `src/components/ExamManagement.tsx`
+- **Purpose**: Administrative exam control system
+- **Function**: Exam lifecycle management, access control, scheduling
+- **Administrative Tools**:
+  - Bulk student enrollment and management
+  - Access code generation and distribution
+  - Exam scheduling with timezone support
+  - Integration with learning management systems
+
+#### `src/components/ExamScheduler.tsx`
+- **Purpose**: Advanced scheduling and calendar management
+- **Function**: Multi-timezone scheduling, recurring exams, conflict detection
+- **Features**:
+  - Calendar integration with popular platforms
+  - Automated reminder system via email/SMS
+  - Resource allocation and room booking
+  - Instructor availability management
+
+### UI Component Library (`src/components/ui/`)
+
+#### Form Components
+- **`button.tsx`**: Customizable button with multiple variants (primary, secondary, destructive)
+- **`input.tsx`**: Text input with validation states and accessibility features
+- **`form.tsx`**: Form wrapper with validation integration and error handling
+- **`label.tsx`**: Accessible form labels with proper association
+- **`textarea.tsx`**: Multi-line text input for essay questions and feedback
+
+#### Layout Components
+- **`card.tsx`**: Container component for content sections with consistent styling
+- **`dialog.tsx`**: Modal dialog system for confirmations and detailed views
+- **`sheet.tsx`**: Slide-out panels for secondary navigation and tools
+- **`tabs.tsx`**: Tabbed interface for organizing related content
+- **`accordion.tsx`**: Collapsible content sections for FAQs and help
+
+#### Data Display Components
+- **`table.tsx`**: Structured data display with sorting and filtering capabilities
+- **`badge.tsx`**: Status indicators and category labels
+- **`progress.tsx`**: Visual progress indicators for exams and uploads
+- **`avatar.tsx`**: User profile pictures with fallback initials
+- **`skeleton.tsx`**: Loading placeholders for better perceived performance
+
+#### Navigation Components
+- **`navigation-menu.tsx`**: Main application navigation with dropdown menus
+- **`breadcrumb.tsx`**: Hierarchical navigation showing current location
+- **`pagination.tsx`**: Page navigation for large data sets
+- **`sidebar.tsx`**: Collapsible side navigation for desktop layouts
+
+#### Feedback Components
+- **`toast.tsx`**: Temporary notification system for user feedback
+- **`alert.tsx`**: Prominent messages for important information
+- **`tooltip.tsx`**: Contextual help and additional information on hover
+- **`popover.tsx`**: Rich content overlays for detailed information
+
+### Utility and Helper Files (`src/lib/` & `src/hooks/`)
+
+#### `src/lib/utils.ts`
+- **Purpose**: Common utility functions used across the application
+- **Functions**:
+  - `cn()`: Tailwind CSS class merging utility
+  - String manipulation helpers
+  - Date formatting and timezone handling
+  - Validation helper functions
+
+#### `src/lib/examStorage.ts`
+- **Purpose**: Local storage management for exam data
+- **Functions**:
+  - Exam data serialization/deserialization
+  - Cache management and cleanup
+  - Offline data synchronization
+  - Data encryption for sensitive information
+
+#### `src/hooks/use-toast.ts`
+- **Purpose**: Toast notification system hook
+- **Function**: Centralized notification management with queue system
+- **Features**: Auto-dismiss timers, action buttons, different severity levels
+
+#### `src/hooks/use-mobile.tsx`
+- **Purpose**: Responsive design helper hook
+- **Function**: Device detection and responsive behavior management
+- **Usage**: Conditional rendering based on screen size, touch device detection
+
+### Static Assets and Configuration
+
+#### `public/favicon.ico`
+- **Purpose**: Browser tab icon and bookmark representation
+- **Function**: Brand identity in browser interfaces
+
+#### `public/placeholder.svg`
+- **Purpose**: Default image placeholder for missing content
+- **Function**: Consistent visual experience when images fail to load
+
+#### `index.html`
+- **Purpose**: HTML template and application shell
+- **Function**: Meta tags, initial loading structure, external script integration
+
+#### `.gitignore`
+- **Purpose**: Version control exclusion rules
+- **Function**: Prevents sensitive files and build artifacts from being committed
+
 ## 🤖 AI Algorithms & Technologies Deep Dive
 
 ### 1. **Computer Vision Algorithms**
